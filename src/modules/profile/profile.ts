@@ -1,5 +1,5 @@
 import { navigate } from '../../router';
-import { getState, updateState } from '../../shared/storage';
+import { getState, updateState, getProfiles, getActiveProfileId, setActiveProfile, renameProfile } from '../../shared/storage';
 import { LEVELS, ACHIEVEMENTS } from '../../shared/gamification';
 import { renderMascot, renderMascotById, MASCOTS, type MascotId } from '../../shared/mascot';
 import { t } from '../../shared/i18n';
@@ -14,6 +14,8 @@ export function renderProfile(container: HTMLElement): void {
   const unlockedIds = new Set(state.gamification.achievements);
   const dictShowSentence = state.dictation?.showSentence ?? 'flash';
   const currentMascot = (state.profile.mascot || 'owl') as MascotId;
+  const profiles = getProfiles();
+  const activeId = getActiveProfileId();
 
   const totalStories = state.writing.stories.length;
   const totalWords = state.writing.stories.reduce((sum, s) => sum + s.wordCount, 0);
@@ -32,6 +34,28 @@ export function renderProfile(container: HTMLElement): void {
     <div class="profile-page fade-in">
       <button class="back-btn" id="btn-back-profile">← ${t.profile.back}</button>
       <h1>🏆 ${t.profile.title}</h1>
+
+      ${profiles.length > 1 ? `
+        <div class="profile-switcher">
+          <h2>👤 Choisir un profil</h2>
+          <div class="profile-switcher-grid">
+            ${profiles.map((p) => `
+              <button class="profile-switch-card ${p.id === activeId ? 'profile-switch-active' : ''}" data-profile-id="${p.id}">
+                <span class="profile-switch-name">${p.name}</span>
+                ${p.id === activeId ? '<span class="profile-switch-badge">Actif</span>' : ''}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="profile-name-section">
+        <label class="profile-name-label">Nom du profil :</label>
+        <div class="profile-name-row">
+          <input type="text" class="profile-name-input" id="profile-name-input" value="${state.profile.name || ''}" placeholder="Entre ton prénom..." />
+          <button class="btn btn-primary" id="btn-save-name">OK</button>
+        </div>
+      </div>
 
       <div class="profile-level">
         ${renderMascot('happy', 80)}
@@ -118,6 +142,35 @@ export function renderProfile(container: HTMLElement): void {
 
   document.getElementById('btn-back-profile')?.addEventListener('click', () => navigate(''));
 
+  // Profile name save
+  document.getElementById('btn-save-name')?.addEventListener('click', () => {
+    const input = document.getElementById('profile-name-input') as HTMLInputElement;
+    const name = input.value.trim();
+    if (name) {
+      renameProfile(activeId, name);
+      updateState((s) => { s.profile.name = name; });
+      input.blur();
+    }
+  });
+
+  document.getElementById('profile-name-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('btn-save-name')?.click();
+    }
+  });
+
+  // Profile switcher
+  container.querySelectorAll('.profile-switch-card').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-profile-id')!;
+      if (id !== activeId) {
+        setActiveProfile(id);
+        updateFavicon();
+        renderProfile(container);
+      }
+    });
+  });
+
   // Mascot picker
   container.querySelectorAll('.mascot-pick-card').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -125,11 +178,9 @@ export function renderProfile(container: HTMLElement): void {
       updateState((s) => { s.profile.mascot = id; });
       updateFavicon();
 
-      // Update active state visually
       container.querySelectorAll('.mascot-pick-card').forEach((b) => b.classList.remove('mascot-pick-active'));
       btn.classList.add('mascot-pick-active');
 
-      // Re-render the header mascot
       const levelDiv = container.querySelector('.profile-level .mascot');
       if (levelDiv) {
         const temp = document.createElement('div');

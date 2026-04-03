@@ -1,4 +1,4 @@
-import { getState } from '../../shared/storage';
+import { getState, getProfiles, getActiveProfileId, createProfile, deleteProfile } from '../../shared/storage';
 import { t } from '../../shared/i18n';
 
 function generateMathQuestion(): { question: string; answer: number } {
@@ -47,14 +47,38 @@ export function renderParentZone(parentEl: HTMLElement): void {
     }
   });
 
+  function renderProfileManagement(): string {
+    const profiles = getProfiles();
+    const activeId = getActiveProfileId();
+
+    return `
+      <div class="parent-profiles">
+        <h3>👥 Gestion des profils</h3>
+        <div class="parent-profiles-list">
+          ${profiles.map((p) => `
+            <div class="parent-profile-row">
+              <span class="parent-profile-name">${p.name} ${p.id === activeId ? '<em>(actif)</em>' : ''}</span>
+              ${profiles.length > 1 ? `<button class="parent-profile-delete" data-delete-id="${p.id}" title="Supprimer">🗑️</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <div class="parent-profile-add">
+          <input type="text" id="new-profile-name" placeholder="Nom du nouveau profil..." class="parent-profile-input" />
+          <button class="btn btn-primary" id="btn-add-profile">+ Ajouter</button>
+        </div>
+      </div>
+    `;
+  }
+
   function showParentDashboard(): void {
     const state = getState();
     const totalStories = state.writing.stories.length;
     const totalWords = state.writing.stories.reduce((sum, s) => sum + s.wordCount, 0);
     const activityDays = Object.keys(state.gamification.dailyActivity).sort().reverse().slice(0, 7);
 
-    document.getElementById('parent-dashboard')!.style.display = 'block';
-    document.getElementById('parent-dashboard')!.innerHTML = `
+    const dashboardEl = document.getElementById('parent-dashboard')!;
+    dashboardEl.style.display = 'block';
+    dashboardEl.innerHTML = `
       <div class="parent-dashboard">
         <h2>📊 Tableau de bord parent</h2>
 
@@ -87,13 +111,45 @@ export function renderParentZone(parentEl: HTMLElement): void {
           <span class="parent-stat-value">${activityDays.length}</span>
         </div>
 
+        ${renderProfileManagement()}
+
         <button class="reset-btn" id="btn-reset">${t.profile.reset}</button>
       </div>
     `;
 
+    // Add profile
+    document.getElementById('btn-add-profile')?.addEventListener('click', () => {
+      const input = document.getElementById('new-profile-name') as HTMLInputElement;
+      const name = input.value.trim();
+      if (name) {
+        createProfile(name);
+        showParentDashboard(); // Re-render
+      }
+    });
+
+    document.getElementById('new-profile-name')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-add-profile')?.click();
+    });
+
+    // Delete profiles
+    dashboardEl.querySelectorAll('.parent-profile-delete').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = (btn as HTMLElement).getAttribute('data-delete-id')!;
+        const profiles = getProfiles();
+        const profile = profiles.find((p) => p.id === id);
+        if (profile && confirm(`Supprimer le profil "${profile.name}" ? Toutes ses données seront perdues.`)) {
+          deleteProfile(id);
+          showParentDashboard(); // Re-render
+        }
+      });
+    });
+
+    // Reset
     document.getElementById('btn-reset')?.addEventListener('click', () => {
       if (confirm(t.profile.resetConfirm)) {
-        localStorage.removeItem('plumigo_state');
+        // Clear all data
+        const keys = Object.keys(localStorage).filter((k) => k.startsWith('plumigo_'));
+        keys.forEach((k) => localStorage.removeItem(k));
         window.location.reload();
       }
     });
