@@ -102,8 +102,8 @@
 }
 
 .dashboard-cards {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin: 1.5rem 0;
 }
@@ -147,7 +147,6 @@
 }
 
 .card-writing, .card-dictation {
-  min-width: 220px;
   background: linear-gradient(135deg, #55efc4, #00b894);
   color: white;
 }
@@ -184,5 +183,17 @@
 @media (max-width: 480px) {
   .stats-bar {
     gap: 1rem;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 1rem 0.75rem;
+  }
+
+  .card-icon {
+    font-size: 2.2rem;
   }
 }
