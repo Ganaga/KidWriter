@@ -111,6 +111,8 @@ export function renderProfile(container: HTMLElement): void {
       </div>
 
       <div id="parent-zone"></div>
+
+      <p class="profile-credits">Cette application a été développée par Ganaël Jatteau pour aider les enfants qui ont des difficultés en orthographe.</p>
     </div>
   `;
 
