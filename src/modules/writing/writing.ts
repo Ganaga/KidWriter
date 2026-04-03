@@ -175,12 +175,12 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
           'Excellent, ton écriture est parfaite !',
         ];
         const msg = encouragements[Math.floor(Math.random() * encouragements.length)]!;
-        feedbackEl.innerHTML = `${renderMascot('celebrating', 48)}<span class="mascot-feedback-text feedback-ok">${msg}</span>`;
+        feedbackEl.innerHTML = `${renderMascot('ecstatic', 48)}<span class="mascot-feedback-text feedback-ok">${msg}</span>`;
       } else if (text.trim().length === 0) {
         feedbackEl.innerHTML = `${renderMascot('happy', 48)}<span class="mascot-feedback-text">${getMascotSpeech('happy')}</span>`;
         errorCountEl.innerHTML = '';
       } else {
-        feedbackEl.innerHTML = `${renderMascot('encouraging', 48)}<span class="mascot-feedback-text">Continue d'écrire, tu te débrouilles bien !</span>`;
+        feedbackEl.innerHTML = `${renderMascot('happy', 48)}<span class="mascot-feedback-text">Continue d'écrire, tu te débrouilles bien !</span>`;
         errorCountEl.innerHTML = '';
       }
     } else {
@@ -201,7 +201,7 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
         }
       }
 
-      const pose = first.isGrammar ? 'thinking' : 'encouraging';
+      const pose = 'unhappy' as const;
       feedbackEl.innerHTML = `${renderMascot(pose, 48)}<span class="mascot-feedback-text feedback-error">${msg}</span>`;
 
       // Error count badges
@@ -222,7 +222,7 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
     popupContainer.innerHTML = '';
 
     const errorTypeLabel = error.isGrammar ? t.writing.grammarError : t.writing.spellingError;
-    const mascotPose = error.isGrammar ? 'thinking' : 'encouraging';
+    const mascotPose = 'unhappy' as const;
     const errorClass = error.isGrammar ? 'popup-grammar' : 'popup-spelling';
 
     const popupTop = Math.min(rect.bottom + 8, window.innerHeight - 200);
