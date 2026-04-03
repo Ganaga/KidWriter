@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev Server",
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "isBackground": true,
+      "group": "build"
+    },
+    {
+      "label": "Build Web",
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Build APK",
+      "type": "shell",
+      "command": "bubblewrap build",
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Génère l'APK Android signé via Bubblewrap (TWA)"
+    },
+    {
+      "label": "Init TWA",
+      "type": "shell",
+      "command": "bubblewrap init --manifest=https://ganaga.github.io/Plumigo/manifest.json",
+      "problemMatcher": [],
+      "detail": "Initialise le projet TWA Bubblewrap (première fois uniquement)"
+    }
+  ]
+}
