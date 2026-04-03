@@ -1,13 +1,54 @@
 import { navigate } from '../../router';
-import { getState } from '../../shared/storage';
+import { getState, updateState, renameProfile, getActiveProfileId } from '../../shared/storage';
 import { LEVELS, updateDailyStreak, getDailyWordsWritten, getDailyWordGoal } from '../../shared/gamification';
 import { renderMascot, getMascotSpeech } from '../../shared/mascot';
 import { t } from '../../shared/i18n';
 import './dashboard.css';
 
+function renderNamePrompt(container: HTMLElement): void {
+  container.innerHTML = `
+    <div class="dashboard">
+      <header class="dashboard-header">
+        <h1 class="dashboard-title">${t.app.title}</h1>
+      </header>
+
+      <div class="mascot-area">
+        ${renderMascot('happy', 140)}
+        <div class="mascot-speech">Salut ! Comment tu t'appelles ?</div>
+      </div>
+
+      <div class="name-prompt">
+        <input type="text" class="name-prompt-input" id="name-input" placeholder="Ton prénom..." autofocus />
+        <button class="btn btn-primary" id="btn-name-ok">C'est parti !</button>
+      </div>
+    </div>
+  `;
+
+  const submit = () => {
+    const input = document.getElementById('name-input') as HTMLInputElement;
+    const name = input.value.trim();
+    if (name) {
+      updateState((s) => { s.profile.name = name; });
+      renameProfile(getActiveProfileId(), name);
+      renderDashboard(container);
+    }
+  };
+
+  document.getElementById('btn-name-ok')?.addEventListener('click', submit);
+  document.getElementById('name-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
+  });
+}
+
 export function renderDashboard(container: HTMLElement): void {
   updateDailyStreak();
   const state = getState();
+
+  if (!state.profile.name) {
+    renderNamePrompt(container);
+    return;
+  }
+
   const level = LEVELS[state.gamification.level - 1] ?? LEVELS[0]!;
   const totalStories = state.writing.stories.length;
   const dailyWords = getDailyWordsWritten();
@@ -18,7 +59,7 @@ export function renderDashboard(container: HTMLElement): void {
     <div class="dashboard">
       <header class="dashboard-header">
         <h1 class="dashboard-title">${t.app.title}</h1>
-        <p class="dashboard-subtitle">${t.app.subtitle}</p>
+        <p class="dashboard-subtitle">Bonjour ${state.profile.name} !</p>
       </header>
 
       <div class="mascot-area">
