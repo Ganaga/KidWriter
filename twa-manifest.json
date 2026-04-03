@@ -1,0 +1,23 @@
+{
+  "packageId": "io.github.ganaga.plumigo",
+  "host": "ganaga.github.io",
+  "name": "Plumigo",
+  "launcherName": "Plumigo",
+  "display": "standalone",
+  "themeColor": "#6C5CE7",
+  "navigationColor": "#6C5CE7",
+  "backgroundColor": "#f8f9fa",
+  "enableNotifications": false,
+  "startUrl": "/Plumigo/",
+  "iconUrl": "https://ganaga.github.io/Plumigo/icon-512.png",
+  "maskableIconUrl": "https://ganaga.github.io/Plumigo/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./plumigo.keystore",
+    "alias": "plumigo"
+  },
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli"
+}

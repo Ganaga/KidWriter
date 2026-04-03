@@ -1,12 +1,13 @@
 {
   "name": "plumigo",
   "version": "1.0.0",
-  "description": "Application éducative pour apprendre à taper et écrire des histoires",
+  "description": "Ton compagnon d'écriture ! Correcteur orthographe et grammaire ludique.",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:apk": "bubblewrap build"
   },
   "keywords": [],
   "author": "",
