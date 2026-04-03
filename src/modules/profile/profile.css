@@ -79,6 +79,63 @@
   line-height: 1.2;
 }
 
+/* Dictation settings */
+.dictation-settings-section {
+  margin-bottom: 2rem;
+}
+
+.dictation-settings-section h2 {
+  font-size: 1.2rem;
+  margin: 0 0 1rem;
+}
+
+.dictation-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.dictation-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1rem 0.5rem;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.dictation-option:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+.dictation-option.dictation-option-active {
+  border-color: var(--primary);
+  background: rgba(108, 92, 231, 0.06);
+  box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
+}
+
+.dictation-option-icon {
+  font-size: 1.8rem;
+}
+
+.dictation-option-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.dictation-option-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
 /* Achievements grid */
 .achievements-section h2 {
   font-size: 1.2rem;

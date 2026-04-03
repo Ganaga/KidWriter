@@ -156,13 +156,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
   },
   {
-    id: 'sentence-10',
-    name: 'Dix phrases parfaites',
-    description: 'Valide 10 phrases sans faute',
-    icon: '💯',
-    check: (s) => s.writing.sentencesValidated >= 10,
-  },
-  {
     id: 'dictation-5',
     name: 'Bon élève',
     description: 'Réussis 5 dictées',

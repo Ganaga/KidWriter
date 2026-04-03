@@ -24,7 +24,6 @@ export interface AppState {
     totalCorrections: number;
     grammarCorrections: number;
     bestCleanStreak: number;
-    sentencesValidated: number;
   };
   gamification: {
     totalPoints: number;
@@ -39,6 +38,7 @@ export interface AppState {
     sentencesCompleted: number;
     perfectScores: number;
     currentDifficulty: 'easy' | 'medium' | 'hard';
+    showSentence: 'flash' | 'hidden';
   };
 }
 

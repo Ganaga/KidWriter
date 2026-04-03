@@ -20,7 +20,6 @@ import {
   setOneAtATimeMode,
 } from './editor';
 import type { GrammarError } from './grammar-checker';
-import { renderSentenceMode } from './sentence-mode';
 import { startPomodoro, formatTime, type PomodoroController } from '../../shared/pomodoro';
 import type { Story } from '../../types';
 import './writing.css';
@@ -174,7 +173,6 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
             <span class="error-count" id="error-count"></span>
           </div>
           <div class="editor-toolbar-right">
-            <button class="toolbar-btn" id="btn-sentence-mode" title="Mode phrase par phrase">📝</button>
             <button class="toolbar-btn active" id="btn-one-at-a-time" title="Une erreur à la fois">1️⃣</button>
             <button class="toolbar-btn" id="btn-undo" title="Annuler (Ctrl+Z)">↩️</button>
             <button class="toolbar-btn" id="btn-redo" title="Rétablir (Ctrl+Y)">↪️</button>
@@ -362,31 +360,6 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
     setOneAtATimeMode(newMode);
     btn.classList.toggle('active', newMode);
     triggerCheck(editorEl);
-  });
-
-  // Sentence mode toggle
-  document.getElementById('btn-sentence-mode')?.addEventListener('click', () => {
-    save();
-    cleanupEditor();
-    const currentContent = getEditorText(editorEl);
-
-    // Replace the page content with sentence mode
-    renderSentenceMode(
-      container,
-      storyId,
-      currentContent,
-      (fullText) => {
-        updateState((s) => {
-          const idx = s.writing.stories.findIndex((st) => st.id === storyId);
-          if (idx >= 0) {
-            s.writing.stories[idx]!.content = fullText;
-            s.writing.stories[idx]!.wordCount = fullText.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
-            s.writing.stories[idx]!.updatedAt = new Date().toISOString();
-          }
-        });
-      },
-      () => navigate(`writing/${storyId}`),
-    );
   });
 
   // Pomodoro timer

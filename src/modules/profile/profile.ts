@@ -12,6 +12,7 @@ export function renderProfile(container: HTMLElement): void {
   const level = LEVELS[state.gamification.level - 1] ?? LEVELS[0]!;
   const nextLevel = LEVELS[state.gamification.level] ?? null;
   const unlockedIds = new Set(state.gamification.achievements);
+  const dictShowSentence = state.dictation?.showSentence ?? 'flash';
   const currentMascot = (state.profile.mascot || 'owl') as MascotId;
 
   const totalStories = state.writing.stories.length;
@@ -52,6 +53,22 @@ export function renderProfile(container: HTMLElement): void {
               <span class="mascot-pick-name">${m.name}</span>
             </button>
           `).join('')}
+        </div>
+      </div>
+
+      <div class="dictation-settings-section">
+        <h2>🎧 Options dictée</h2>
+        <div class="dictation-options">
+          <button class="dictation-option ${dictShowSentence === 'flash' ? 'dictation-option-active' : ''}" data-dict-show="flash">
+            <span class="dictation-option-icon">👀</span>
+            <span class="dictation-option-label">Afficher 5 sec</span>
+            <span class="dictation-option-desc">La phrase s'affiche 5 secondes puis disparaît</span>
+          </button>
+          <button class="dictation-option ${dictShowSentence === 'hidden' ? 'dictation-option-active' : ''}" data-dict-show="hidden">
+            <span class="dictation-option-icon">🙈</span>
+            <span class="dictation-option-label">Phrase cachée</span>
+            <span class="dictation-option-desc">La phrase n'est jamais affichée, uniquement lue à voix haute</span>
+          </button>
         </div>
       </div>
 
@@ -117,6 +134,16 @@ export function renderProfile(container: HTMLElement): void {
         temp.innerHTML = renderMascotById(id, 'happy', 80);
         levelDiv.replaceWith(temp.firstElementChild!);
       }
+    });
+  });
+
+  // Dictation display option
+  container.querySelectorAll('.dictation-option').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-dict-show') as 'flash' | 'hidden';
+      updateState((s) => { s.dictation.showSentence = mode; });
+      container.querySelectorAll('.dictation-option').forEach((b) => b.classList.remove('dictation-option-active'));
+      btn.classList.add('dictation-option-active');
     });
   });
 

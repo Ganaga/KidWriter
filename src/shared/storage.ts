@@ -16,7 +16,6 @@ function defaultState(): AppState {
       totalCorrections: 0,
       grammarCorrections: 0,
       bestCleanStreak: 0,
-      sentencesValidated: 0,
     },
     gamification: {
       totalPoints: 0,
@@ -31,6 +30,7 @@ function defaultState(): AppState {
       sentencesCompleted: 0,
       perfectScores: 0,
       currentDifficulty: 'easy',
+      showSentence: 'flash',
     },
   };
 }
