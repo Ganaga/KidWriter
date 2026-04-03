@@ -3,12 +3,12 @@ import { updateState, getState } from './storage';
 
 export const LEVELS: Level[] = [
   { name: 'Débutant', minPoints: 0 },
-  { name: 'Apprenti', minPoints: 100 },
-  { name: 'Explorateur', minPoints: 300 },
-  { name: 'Aventurier', minPoints: 600 },
-  { name: 'Champion', minPoints: 1000 },
-  { name: 'Maître des mots', minPoints: 1500 },
-  { name: 'Légendaire', minPoints: 2500 },
+  { name: 'Apprenti', minPoints: 20 },
+  { name: 'Explorateur', minPoints: 50 },
+  { name: 'Aventurier', minPoints: 100 },
+  { name: 'Champion', minPoints: 200 },
+  { name: 'Maître des mots', minPoints: 350 },
+  { name: 'Légendaire', minPoints: 500 },
 ];
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -232,7 +232,7 @@ export function updateDailyStreak(): void {
 
     if (!state.gamification.dailyActivity[today]) {
       state.gamification.dailyActivity[today] = { wordsWritten: 0 };
-      state.gamification.totalPoints += 20;
+      state.gamification.totalPoints += 5;
       state.gamification.level = computeLevel(state.gamification.totalPoints);
     }
   });

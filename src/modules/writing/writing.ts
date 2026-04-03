@@ -123,6 +123,7 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
   let lastWordCount = story.wordCount;
   let ttsEnabled = isTtsEnabled();
+  let zeroFaultAwarded = false;
 
   const ttsIcon = ttsEnabled ? '🔊' : '🔇';
   const ttsTitle = ttsEnabled ? t.writing.ttsOn : t.writing.ttsOff;
@@ -192,8 +193,11 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
       // Encouragement mode
       if (text.trim().length > 10) {
         errorCountEl.innerHTML = `<span class="no-errors">✅ ${t.writing.noErrors}</span>`;
-        awardZeroFault();
-        addPoints(10);
+        if (!zeroFaultAwarded) {
+          zeroFaultAwarded = true;
+          awardZeroFault();
+          addPoints(2);
+        }
         const encouragements = [
           'Zéro faute, bravo ! Continue comme ça !',
           'Parfait ! Ton texte est impeccable !',
@@ -211,6 +215,7 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
         errorCountEl.innerHTML = '';
       }
     } else {
+      zeroFaultAwarded = false;
       // Show first error as mascot feedback
       const first = errors[0]!;
       const errorWord = text.slice(first.offset, first.offset + first.length);
@@ -280,7 +285,7 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
 
         // Record correction
         recordCorrection(error.isGrammar);
-        const { newAchievements } = addPoints(5);
+        const { newAchievements } = addPoints(2);
         for (const ach of newAchievements) {
           playAchievement();
           showNotification(ach.name, ach.icon);
