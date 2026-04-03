@@ -14,6 +14,7 @@ function defaultState(): KidWriterState {
       currentStoryId: null,
       totalCorrections: 0,
       grammarCorrections: 0,
+      bestCleanStreak: 0,
     },
     gamification: {
       totalPoints: 0,

@@ -66,6 +66,63 @@ export const ACHIEVEMENTS: Achievement[] = [
       });
     },
   },
+  // Gamme : mots sans faute
+  {
+    id: 'clean-4',
+    name: 'Première gamme',
+    description: 'Écris 4 mots sans aucune faute',
+    icon: '🎵',
+    check: (s) => s.writing.bestCleanStreak >= 4,
+  },
+  {
+    id: 'clean-8',
+    name: 'Gamme montante',
+    description: 'Écris 8 mots sans aucune faute',
+    icon: '🎶',
+    check: (s) => s.writing.bestCleanStreak >= 8,
+  },
+  {
+    id: 'clean-12',
+    name: 'Bonne mélodie',
+    description: 'Écris 12 mots sans aucune faute',
+    icon: '🎸',
+    check: (s) => s.writing.bestCleanStreak >= 12,
+  },
+  {
+    id: 'clean-16',
+    name: 'En harmonie',
+    description: 'Écris 16 mots sans aucune faute',
+    icon: '🎹',
+    check: (s) => s.writing.bestCleanStreak >= 16,
+  },
+  {
+    id: 'clean-20',
+    name: 'Solo parfait',
+    description: 'Écris 20 mots sans aucune faute',
+    icon: '🎺',
+    check: (s) => s.writing.bestCleanStreak >= 20,
+  },
+  {
+    id: 'clean-28',
+    name: 'Symphonie',
+    description: 'Écris 28 mots sans aucune faute',
+    icon: '🎻',
+    check: (s) => s.writing.bestCleanStreak >= 28,
+  },
+  {
+    id: 'clean-36',
+    name: 'Orchestre',
+    description: 'Écris 36 mots sans aucune faute',
+    icon: '🥁',
+    check: (s) => s.writing.bestCleanStreak >= 36,
+  },
+  {
+    id: 'clean-50',
+    name: 'Virtuose',
+    description: 'Écris 50 mots sans aucune faute !',
+    icon: '🏅',
+    check: (s) => s.writing.bestCleanStreak >= 50,
+  },
   {
     id: 'streak-7',
     name: 'Fidèle',
@@ -179,6 +236,24 @@ export function updateDailyStreak(): void {
       state.gamification.level = computeLevel(state.gamification.totalPoints);
     }
   });
+}
+
+export function updateCleanStreak(totalWords: number, errorCount: number): { newAchievements: Achievement[]; leveledUp: boolean } {
+  // If no errors, the entire text is a clean streak
+  const cleanWords = errorCount === 0 ? totalWords : 0;
+  let result = { newAchievements: [] as Achievement[], leveledUp: false };
+
+  if (cleanWords > 0) {
+    updateState((state) => {
+      if (cleanWords > state.writing.bestCleanStreak) {
+        state.writing.bestCleanStreak = cleanWords;
+      }
+    });
+    // Check for new achievements
+    result = addPoints(0);
+  }
+
+  return result;
 }
 
 export function recordWritingActivity(words: number): void {

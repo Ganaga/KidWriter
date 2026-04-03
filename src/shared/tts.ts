@@ -1,18 +1,17 @@
 const TTS_KEY = 'kidwriter_tts_enabled';
 
 let frenchVoice: SpeechSynthesisVoice | null = null;
-let voicesLoaded = false;
 
-function loadVoices(): void {
+function findFrenchVoice(): void {
+  if (typeof speechSynthesis === 'undefined') return;
   const voices = speechSynthesis.getVoices();
   frenchVoice = voices.find((v) => v.lang.startsWith('fr')) ?? null;
-  voicesLoaded = true;
 }
 
-// Voices may load async
+// Voices load asynchronously on most browsers
 if (typeof speechSynthesis !== 'undefined') {
-  loadVoices();
-  speechSynthesis.addEventListener('voiceschanged', loadVoices);
+  findFrenchVoice();
+  speechSynthesis.addEventListener('voiceschanged', findFrenchVoice);
 }
 
 export function isTtsEnabled(): boolean {
@@ -22,7 +21,7 @@ export function isTtsEnabled(): boolean {
 export function toggleTts(): boolean {
   const newState = !isTtsEnabled();
   localStorage.setItem(TTS_KEY, String(newState));
-  if (!newState) {
+  if (!newState && typeof speechSynthesis !== 'undefined') {
     speechSynthesis.cancel();
   }
   return newState;
@@ -32,19 +31,25 @@ export function speak(text: string): void {
   if (!isTtsEnabled()) return;
   if (typeof speechSynthesis === 'undefined') return;
 
-  if (!voicesLoaded) loadVoices();
+  // Refresh voices if not found yet
+  if (!frenchVoice) findFrenchVoice();
 
+  // Chrome bug: cancel() then immediate speak() can fail.
+  // Use a small delay to work around it.
   speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'fr-FR';
-  if (frenchVoice) {
-    utterance.voice = frenchVoice;
-  }
-  utterance.rate = 0.9;
-  utterance.pitch = 1.1;
+  setTimeout(() => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'fr-FR';
+    if (frenchVoice) {
+      utterance.voice = frenchVoice;
+    }
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    utterance.volume = 1;
 
-  speechSynthesis.speak(utterance);
+    speechSynthesis.speak(utterance);
+  }, 50);
 }
 
 export function speakSpellingError(word: string, suggestion: string | undefined): void {

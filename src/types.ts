@@ -22,6 +22,7 @@ export interface KidWriterState {
     currentStoryId: string | null;
     totalCorrections: number;
     grammarCorrections: number;
+    bestCleanStreak: number; // best streak of consecutive error-free words
   };
   gamification: {
     totalPoints: number;

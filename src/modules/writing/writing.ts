@@ -1,6 +1,6 @@
 import { navigate } from '../../router';
 import { getState, updateState } from '../../shared/storage';
-import { addPoints, recordWritingActivity, recordCorrection, awardZeroFault } from '../../shared/gamification';
+import { addPoints, recordWritingActivity, recordCorrection, awardZeroFault, updateCleanStreak } from '../../shared/gamification';
 import { showNotification } from '../../shared/animations';
 import { playAchievement } from '../../shared/audio';
 import { renderMascot } from '../../shared/mascot';
@@ -156,11 +156,19 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
     const spelling = errors.filter((e) => !e.isGrammar).length;
     const grammar = errors.filter((e) => e.isGrammar).length;
 
+    const text = getEditorText(editorEl);
+    const wordCount = text.trim().split(/\s+/).filter((w) => w.length > 0).length;
+
+    // Update clean streak (words without errors)
+    const streakResult = updateCleanStreak(wordCount, errors.length);
+    for (const ach of streakResult.newAchievements) {
+      playAchievement();
+      showNotification(ach.name, ach.icon);
+    }
+
     if (errors.length === 0) {
-      const text = getEditorText(editorEl);
       if (text.trim().length > 10) {
         errorCountEl.innerHTML = `<span class="no-errors">✅ ${t.writing.noErrors}</span>`;
-        // Award zero fault achievement
         awardZeroFault();
         addPoints(10);
       } else {
