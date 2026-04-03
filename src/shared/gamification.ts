@@ -126,14 +126,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'streak-7',
     name: 'Fidèle',
-    description: 'Utilise KidWriter 7 jours de suite',
+    description: 'Utilise Plumigo 7 jours de suite',
     icon: '🔥',
     check: (s) => s.gamification.dailyStreak >= 7,
   },
   {
     id: 'streak-30',
     name: 'Inarrêtable',
-    description: 'Utilise KidWriter 30 jours de suite',
+    description: 'Utilise Plumigo 30 jours de suite',
     icon: '💎',
     check: (s) => s.gamification.dailyStreak >= 30,
   },

@@ -1,7 +1,7 @@
 export const t = {
   app: {
-    title: 'KidWriter',
-    subtitle: 'Écris tes histoires et deviens un champion de l\'écriture !',
+    title: 'Plumigo',
+    subtitle: 'Ton compagnon d\'écriture !',
   },
   dashboard: {
     writing: 'Écrire une histoire',

@@ -1,8 +1,8 @@
-import type { KidWriterState } from '../types';
+import type { AppState } from '../types';
 
-const STORAGE_KEY = 'kidwriter_state';
+const STORAGE_KEY = 'plumigo_state';
 
-function defaultState(): KidWriterState {
+function defaultState(): AppState {
   return {
     profile: {
       name: '',
@@ -28,7 +28,7 @@ function defaultState(): KidWriterState {
   };
 }
 
-export function loadState(): KidWriterState {
+export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -40,15 +40,15 @@ export function loadState(): KidWriterState {
   return defaultState();
 }
 
-export function saveState(state: KidWriterState): void {
+export function saveState(state: AppState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-export function getState(): KidWriterState {
+export function getState(): AppState {
   return loadState();
 }
 
-export function updateState(updater: (state: KidWriterState) => void): KidWriterState {
+export function updateState(updater: (state: AppState) => void): AppState {
   const state = loadState();
   updater(state);
   saveState(state);

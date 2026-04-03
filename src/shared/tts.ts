@@ -1,4 +1,4 @@
-const TTS_KEY = 'kidwriter_tts_enabled';
+const TTS_KEY = 'plumigo_tts_enabled';
 
 let frenchVoice: SpeechSynthesisVoice | null = null;
 

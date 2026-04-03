@@ -93,7 +93,7 @@ export function renderParentZone(parentEl: HTMLElement): void {
 
     document.getElementById('btn-reset')?.addEventListener('click', () => {
       if (confirm(t.profile.resetConfirm)) {
-        localStorage.removeItem('kidwriter_state');
+        localStorage.removeItem('plumigo_state');
         window.location.reload();
       }
     });

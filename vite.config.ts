@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/KidWriter/',
+  base: '/Plumigo/',
   build: {
     outDir: 'dist',
     sourcemap: true,

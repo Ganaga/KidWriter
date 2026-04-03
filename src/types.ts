@@ -11,7 +11,7 @@ export interface DailyActivity {
   wordsWritten: number;
 }
 
-export interface KidWriterState {
+export interface AppState {
   profile: {
     name: string;
     createdAt: string;
@@ -40,7 +40,7 @@ export interface Achievement {
   name: string;
   description: string;
   icon: string;
-  check: (state: KidWriterState) => boolean;
+  check: (state: AppState) => boolean;
 }
 
 export interface Level {

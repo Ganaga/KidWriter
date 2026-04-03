@@ -1,11 +1,11 @@
-const CACHE_NAME = 'kidwriter-v2';
+const CACHE_NAME = 'plumigo-v2';
 const STATIC_ASSETS = [
-  '/KidWriter/',
-  '/KidWriter/index.html',
-  '/KidWriter/favicon.svg',
-  '/KidWriter/icon-192.png',
-  '/KidWriter/icon-512.png',
-  '/KidWriter/manifest.json',
+  '/Plumigo/',
+  '/Plumigo/index.html',
+  '/Plumigo/favicon.svg',
+  '/Plumigo/icon-192.png',
+  '/Plumigo/icon-512.png',
+  '/Plumigo/manifest.json',
 ];
 
 self.addEventListener('install', (event) => {
