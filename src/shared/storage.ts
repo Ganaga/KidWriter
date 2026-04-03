@@ -9,15 +9,11 @@ function defaultState(): KidWriterState {
       createdAt: new Date().toISOString(),
       theme: 'light',
     },
-    typing: {
-      completedLessons: {},
-      currentLesson: 'lesson-1',
-      totalKeysTyped: 0,
-      totalCorrectKeys: 0,
-    },
     writing: {
       stories: [],
       currentStoryId: null,
+      totalCorrections: 0,
+      grammarCorrections: 0,
     },
     gamification: {
       totalPoints: 0,

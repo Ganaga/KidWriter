@@ -9,7 +9,7 @@ export function renderDashboard(container: HTMLElement): void {
   updateDailyStreak();
   const state = getState();
   const level = LEVELS[state.gamification.level - 1] ?? LEVELS[0]!;
-  const totalStars = Object.values(state.typing.completedLessons).reduce((sum, l) => sum + l.stars, 0);
+  const totalStories = state.writing.stories.length;
 
   container.innerHTML = `
     <div class="dashboard">
@@ -35,19 +35,13 @@ export function renderDashboard(container: HTMLElement): void {
           <span class="stat-label">${state.gamification.totalPoints} ${t.dashboard.points}</span>
         </div>
         <div class="stat">
-          <span class="stat-icon">⭐</span>
-          <span class="stat-value">${totalStars}</span>
-          <span class="stat-label">${t.dashboard.stars}</span>
+          <span class="stat-icon">📚</span>
+          <span class="stat-value">${totalStories}</span>
+          <span class="stat-label">${t.dashboard.stories}</span>
         </div>
       </div>
 
       <div class="dashboard-cards">
-        <button class="card card-typing" data-route="typing">
-          <div class="card-icon">⌨️</div>
-          <h2>${t.dashboard.typing}</h2>
-          <p>${t.dashboard.typingDesc}</p>
-        </button>
-
         <button class="card card-writing" data-route="writing">
           <div class="card-icon">✍️</div>
           <h2>${t.dashboard.writing}</h2>

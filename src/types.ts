@@ -1,9 +1,3 @@
-export interface LessonResult {
-  stars: number;
-  bestWpm: number;
-  bestAccuracy: number;
-}
-
 export interface Story {
   id: string;
   title: string;
@@ -14,7 +8,6 @@ export interface Story {
 }
 
 export interface DailyActivity {
-  keysTyped: number;
   wordsWritten: number;
 }
 
@@ -24,15 +17,11 @@ export interface KidWriterState {
     createdAt: string;
     theme: 'light' | 'dark';
   };
-  typing: {
-    completedLessons: Record<string, LessonResult>;
-    currentLesson: string;
-    totalKeysTyped: number;
-    totalCorrectKeys: number;
-  };
   writing: {
     stories: Story[];
     currentStoryId: string | null;
+    totalCorrections: number;
+    grammarCorrections: number;
   };
   gamification: {
     totalPoints: number;
@@ -57,5 +46,5 @@ export interface Level {
   minPoints: number;
 }
 
-export type Route = '' | 'typing' | 'writing' | 'profile';
+export type Route = '' | 'writing' | 'profile';
 export type RouteHandler = (container: HTMLElement, params?: string) => void | (() => void);

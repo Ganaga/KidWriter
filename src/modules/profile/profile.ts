@@ -12,14 +12,10 @@ export function renderProfile(container: HTMLElement): void {
   const nextLevel = LEVELS[state.gamification.level] ?? null;
   const unlockedIds = new Set(state.gamification.achievements);
 
-  const totalLessons = Object.keys(state.typing.completedLessons).length;
   const totalStories = state.writing.stories.length;
-  const avgAccuracy = state.typing.totalKeysTyped > 0
-    ? Math.round((state.typing.totalCorrectKeys / state.typing.totalKeysTyped) * 100)
-    : 0;
-  const totalStars = Object.values(state.typing.completedLessons).reduce((sum, l) => sum + l.stars, 0);
+  const totalWords = state.writing.stories.reduce((sum, s) => sum + s.wordCount, 0);
+  const totalCorrections = state.writing.totalCorrections;
 
-  // Progress to next level
   let progressPct = 100;
   let progressLabel = 'Niveau max !';
   if (nextLevel) {
@@ -65,20 +61,20 @@ export function renderProfile(container: HTMLElement): void {
         <h2>📊 ${t.profile.stats}</h2>
         <div class="stats-grid">
           <div class="stat-card">
-            <span class="stat-card-value">${totalLessons}/20</span>
-            <span class="stat-card-label">Leçons terminées</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-card-value">${totalStars} ⭐</span>
-            <span class="stat-card-label">Étoiles gagnées</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-card-value">${avgAccuracy}%</span>
-            <span class="stat-card-label">${t.profile.accuracy}</span>
-          </div>
-          <div class="stat-card">
             <span class="stat-card-value">${totalStories}</span>
             <span class="stat-card-label">${t.profile.totalStories}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-value">${totalWords.toLocaleString('fr-FR')}</span>
+            <span class="stat-card-label">${t.profile.totalWords}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-value">${totalCorrections}</span>
+            <span class="stat-card-label">${t.profile.totalCorrections}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-value">🔥 ${state.gamification.dailyStreak}</span>
+            <span class="stat-card-label">${t.dashboard.streak}</span>
           </div>
         </div>
       </div>

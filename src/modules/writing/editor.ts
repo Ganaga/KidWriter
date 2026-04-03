@@ -1,11 +1,16 @@
-import { checkText, initSpellChecker, isReady } from './spell-bridge';
+import { checkGrammar, cancelCheck, type GrammarError } from './grammar-checker';
+import { speakSpellingError, speakGrammarError, isTtsEnabled } from '../../shared/tts';
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-let currentErrors: Map<string, string[]> = new Map(); // word → suggestions
-let onSuggestionClick: ((word: string, suggestions: string[]) => void) | null = null;
+let currentErrors: GrammarError[] = [];
+let onErrorClick: ((error: GrammarError, rect: DOMRect) => void) | null = null;
+let onErrorsUpdated: ((errors: GrammarError[]) => void) | null = null;
 
-export function setOnSuggestionClick(cb: (word: string, suggestions: string[]) => void): void {
-  onSuggestionClick = cb;
+export function setOnErrorClick(cb: (error: GrammarError, rect: DOMRect) => void): void {
+  onErrorClick = cb;
+}
+
+export function setOnErrorsUpdated(cb: (errors: GrammarError[]) => void): void {
+  onErrorsUpdated = cb;
 }
 
 function getPlainText(el: HTMLElement): string {
@@ -16,22 +21,35 @@ function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function decorateText(text: string, errors: Map<string, string[]>): string {
-  if (errors.size === 0) return escapeHtml(text);
+function buildDecoratedHtml(text: string, errors: GrammarError[]): string {
+  if (errors.length === 0) return escapeHtml(text);
 
-  // Split into words and whitespace, preserving structure
-  const parts = text.split(/(\s+)/);
-  return parts
-    .map((part) => {
-      if (/^\s+$/.test(part)) return part;
-      const clean = part.replace(/[.,!?;:'"()\-]/g, '');
-      if (errors.has(clean.toLowerCase())) {
-        const suggestions = errors.get(clean.toLowerCase())!;
-        return `<span class="spell-error" data-word="${escapeHtml(clean)}" data-suggestions="${escapeHtml(suggestions.join(','))}">${escapeHtml(part)}</span>`;
-      }
-      return escapeHtml(part);
-    })
-    .join('');
+  // Sort by offset ascending
+  const sorted = [...errors]
+    .map((e, i) => ({ ...e, originalIdx: i }))
+    .sort((a, b) => a.offset - b.offset);
+
+  let result = '';
+  let lastEnd = 0;
+
+  for (const err of sorted) {
+    // Add text before this error
+    if (err.offset > lastEnd) {
+      result += escapeHtml(text.slice(lastEnd, err.offset));
+    }
+    // Add the error span
+    const match = text.slice(err.offset, err.offset + err.length);
+    const cls = err.isGrammar ? 'grammar-error' : 'spell-error';
+    result += `<span class="${cls}" data-error-idx="${err.originalIdx}">${escapeHtml(match)}</span>`;
+    lastEnd = err.offset + err.length;
+  }
+
+  // Add remaining text
+  if (lastEnd < text.length) {
+    result += escapeHtml(text.slice(lastEnd));
+  }
+
+  return result;
 }
 
 function saveSelection(el: HTMLElement): number {
@@ -68,36 +86,49 @@ function restoreSelection(el: HTMLElement, offset: number): void {
   }
 }
 
-function runSpellCheck(editorEl: HTMLElement): void {
+function applyDecorations(editorEl: HTMLElement): void {
   const text = getPlainText(editorEl);
-  if (!isReady() || text.trim().length === 0) return;
+  const cursorPos = saveSelection(editorEl);
+  const html = buildDecoratedHtml(text, currentErrors);
+  editorEl.innerHTML = html;
+  restoreSelection(editorEl, cursorPos);
 
-  checkText(text, (results) => {
-    currentErrors.clear();
+  // Attach click handlers
+  editorEl.querySelectorAll('[data-error-idx]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt((el as HTMLElement).dataset.errorIdx ?? '0', 10);
+      const error = currentErrors[idx];
+      if (error && onErrorClick) {
+        const rect = el.getBoundingClientRect();
+        onErrorClick(error, rect);
 
-    for (const r of results) {
-      if (!r.correct) {
-        currentErrors.set(r.word.toLowerCase(), r.suggestions);
-      }
-    }
-
-    // Re-render with decorations
-    const cursorPos = saveSelection(editorEl);
-    const decorated = decorateText(text, currentErrors);
-    editorEl.innerHTML = decorated;
-    restoreSelection(editorEl, cursorPos);
-
-    // Attach click handlers to spell errors
-    editorEl.querySelectorAll('.spell-error').forEach((el) => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const word = (el as HTMLElement).dataset.word ?? '';
-        const suggestions = ((el as HTMLElement).dataset.suggestions ?? '').split(',').filter(Boolean);
-        if (onSuggestionClick) {
-          onSuggestionClick(word, suggestions);
+        // TTS feedback
+        if (isTtsEnabled()) {
+          if (error.isGrammar) {
+            speakGrammarError(error.message);
+          } else {
+            const word = text.slice(error.offset, error.offset + error.length);
+            speakSpellingError(word, error.replacements[0]);
+          }
         }
-      });
+      }
     });
+  });
+}
+
+function runGrammarCheck(editorEl: HTMLElement): void {
+  const text = getPlainText(editorEl);
+  if (text.trim().length < 2) {
+    currentErrors = [];
+    if (onErrorsUpdated) onErrorsUpdated([]);
+    return;
+  }
+
+  checkGrammar(text, (errors) => {
+    currentErrors = errors;
+    applyDecorations(editorEl);
+    if (onErrorsUpdated) onErrorsUpdated(errors);
   });
 }
 
@@ -105,15 +136,13 @@ export function initEditor(editorEl: HTMLElement): void {
   editorEl.setAttribute('contenteditable', 'true');
   editorEl.setAttribute('spellcheck', 'false');
 
-  initSpellChecker(() => {
-    // Spell checker ready, run initial check
-    runSpellCheck(editorEl);
-  });
-
   editorEl.addEventListener('input', () => {
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => runSpellCheck(editorEl), 500);
+    runGrammarCheck(editorEl);
   });
+}
+
+export function triggerCheck(editorEl: HTMLElement): void {
+  runGrammarCheck(editorEl);
 }
 
 export function getEditorText(editorEl: HTMLElement): string {
@@ -122,5 +151,38 @@ export function getEditorText(editorEl: HTMLElement): string {
 
 export function setEditorText(editorEl: HTMLElement, text: string): void {
   editorEl.innerText = text;
-  runSpellCheck(editorEl);
+  runGrammarCheck(editorEl);
+}
+
+export function replaceError(editorEl: HTMLElement, error: GrammarError, replacement: string): void {
+  const text = getPlainText(editorEl);
+  const before = text.slice(0, error.offset);
+  const after = text.slice(error.offset + error.length);
+  const newText = before + replacement + after;
+
+  // Remove this error and adjust offsets
+  const diff = replacement.length - error.length;
+  currentErrors = currentErrors
+    .filter((e) => e !== error)
+    .map((e) => {
+      if (e.offset > error.offset) {
+        return { ...e, offset: e.offset + diff };
+      }
+      return e;
+    });
+
+  editorEl.innerText = newText;
+  applyDecorations(editorEl);
+  restoreSelection(editorEl, error.offset + replacement.length);
+}
+
+export function getCurrentErrors(): GrammarError[] {
+  return currentErrors;
+}
+
+export function cleanupEditor(): void {
+  cancelCheck();
+  currentErrors = [];
+  onErrorClick = null;
+  onErrorsUpdated = null;
 }

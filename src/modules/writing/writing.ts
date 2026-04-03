@@ -1,12 +1,21 @@
 import { navigate } from '../../router';
 import { getState, updateState } from '../../shared/storage';
-import { addPoints, recordWritingActivity } from '../../shared/gamification';
+import { addPoints, recordWritingActivity, recordCorrection, awardZeroFault } from '../../shared/gamification';
 import { showNotification } from '../../shared/animations';
 import { playAchievement } from '../../shared/audio';
 import { renderMascot } from '../../shared/mascot';
 import { t } from '../../shared/i18n';
-import { initEditor, getEditorText, setEditorText, setOnSuggestionClick } from './editor';
-import { isReady } from './spell-bridge';
+import { isTtsEnabled, toggleTts, hasTtsSupport } from '../../shared/tts';
+import {
+  initEditor,
+  getEditorText,
+  setOnErrorClick,
+  setOnErrorsUpdated,
+  replaceError,
+  triggerCheck,
+  cleanupEditor,
+} from './editor';
+import type { GrammarError } from './grammar-checker';
 import { getRandomPrompt } from './prompts';
 import type { Story } from '../../types';
 import './writing.css';
@@ -91,6 +100,10 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
   const prompt = getRandomPrompt();
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
   let lastWordCount = story.wordCount;
+  let ttsEnabled = isTtsEnabled();
+
+  const ttsIcon = ttsEnabled ? '🔊' : '🔇';
+  const ttsTitle = ttsEnabled ? t.writing.ttsOn : t.writing.ttsOff;
 
   container.innerHTML = `
     <div class="writing-page fade-in">
@@ -106,12 +119,10 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
         <div class="editor-toolbar">
           <div class="editor-toolbar-left">
             <span class="word-count" id="word-count">${story.wordCount} ${t.writing.words}</span>
-            <span class="spell-status" id="spell-status">
-              <span class="spinner" style="width:14px;height:14px;border-width:2px;"></span>
-              ${t.writing.loading}
-            </span>
+            <span class="error-count" id="error-count"></span>
           </div>
-          <div>
+          <div class="editor-toolbar-right">
+            ${hasTtsSupport() ? `<button class="tts-toggle" id="btn-tts" title="${ttsTitle}">${ttsIcon}</button>` : ''}
             <span class="save-indicator" id="save-indicator">${t.writing.saved}</span>
             <button class="delete-story-btn" id="btn-delete">🗑️ ${t.writing.delete}</button>
           </div>
@@ -126,7 +137,7 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
 
   const editorEl = document.getElementById('editor')!;
   const wordCountEl = document.getElementById('word-count')!;
-  const spellStatusEl = document.getElementById('spell-status')!;
+  const errorCountEl = document.getElementById('error-count')!;
   const saveIndicatorEl = document.getElementById('save-indicator')!;
 
   // Set initial content
@@ -134,16 +145,104 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
     editorEl.innerText = story.content;
   }
 
-  // Init spell checker
+  // Init editor with grammar checking
   initEditor(editorEl);
 
-  // Update spell status when ready
-  const checkReady = setInterval(() => {
-    if (isReady()) {
-      spellStatusEl.innerHTML = '✅ Dictionnaire prêt';
-      clearInterval(checkReady);
+  // Trigger initial check after a short delay
+  setTimeout(() => triggerCheck(editorEl), 500);
+
+  // Update error count display
+  setOnErrorsUpdated((errors) => {
+    const spelling = errors.filter((e) => !e.isGrammar).length;
+    const grammar = errors.filter((e) => e.isGrammar).length;
+
+    if (errors.length === 0) {
+      const text = getEditorText(editorEl);
+      if (text.trim().length > 10) {
+        errorCountEl.innerHTML = `<span class="no-errors">✅ ${t.writing.noErrors}</span>`;
+        // Award zero fault achievement
+        awardZeroFault();
+        addPoints(10);
+      } else {
+        errorCountEl.innerHTML = '';
+      }
+    } else {
+      const parts: string[] = [];
+      if (spelling > 0) parts.push(`<span class="error-badge error-badge-spell">${spelling} ortho</span>`);
+      if (grammar > 0) parts.push(`<span class="error-badge error-badge-grammar">${grammar} gram</span>`);
+      errorCountEl.innerHTML = parts.join(' ');
     }
-  }, 500);
+  });
+
+  // Suggestion popup on error click
+  setOnErrorClick((error: GrammarError, rect: DOMRect) => {
+    const popupContainer = document.getElementById('suggestion-popup-container')!;
+    popupContainer.innerHTML = '';
+
+    const errorTypeLabel = error.isGrammar ? t.writing.grammarError : t.writing.spellingError;
+    const mascotPose = error.isGrammar ? 'thinking' : 'encouraging';
+    const errorClass = error.isGrammar ? 'popup-grammar' : 'popup-spelling';
+
+    const popupTop = Math.min(rect.bottom + 8, window.innerHeight - 200);
+    const popupLeft = Math.max(8, Math.min(rect.left, window.innerWidth - 300));
+
+    popupContainer.innerHTML = `
+      <div class="suggestion-popup ${errorClass}" style="top:${popupTop}px;left:${popupLeft}px;">
+        <div class="suggestion-popup-header">
+          ${renderMascot(mascotPose, 36)}
+          <div>
+            <span class="error-type-label">${errorTypeLabel}</span>
+            <p class="error-message">${error.message}</p>
+          </div>
+        </div>
+        ${error.replacements.length > 0 ? `
+          <div class="suggestion-label">${t.writing.spellSuggestions}</div>
+          <div class="suggestion-list">
+            ${error.replacements.map((s) => `<button class="suggestion-btn" data-suggestion="${s}">${s}</button>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    popupContainer.querySelectorAll('.suggestion-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const suggestion = btn.getAttribute('data-suggestion')!;
+        replaceError(editorEl, error, suggestion);
+
+        // Record correction
+        recordCorrection(error.isGrammar);
+        const { newAchievements } = addPoints(5);
+        for (const ach of newAchievements) {
+          playAchievement();
+          showNotification(ach.name, ach.icon);
+        }
+
+        popupContainer.innerHTML = '';
+        save();
+
+        // Re-check after correction
+        setTimeout(() => triggerCheck(editorEl), 300);
+      });
+    });
+
+    // Close popup when clicking outside
+    const closePopup = (e: Event) => {
+      if (!(e.target as HTMLElement).closest('.suggestion-popup')) {
+        popupContainer.innerHTML = '';
+        document.removeEventListener('click', closePopup);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closePopup), 100);
+  });
+
+  // TTS toggle
+  document.getElementById('btn-tts')?.addEventListener('click', () => {
+    ttsEnabled = toggleTts();
+    const btn = document.getElementById('btn-tts')!;
+    btn.textContent = ttsEnabled ? '🔊' : '🔇';
+    btn.title = ttsEnabled ? t.writing.ttsOn : t.writing.ttsOff;
+    showNotification(ttsEnabled ? t.writing.ttsOn : t.writing.ttsOff, ttsEnabled ? '🔊' : '🔇');
+  });
 
   // Auto-save function
   function save(): void {
@@ -156,7 +255,6 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
         s.writing.stories[idx]!.content = text;
         s.writing.stories[idx]!.wordCount = words;
         s.writing.stories[idx]!.updatedAt = new Date().toISOString();
-        // Auto-title from first line
         if (!s.writing.stories[idx]!.title) {
           const firstLine = text.split('\n')[0]?.trim().slice(0, 40);
           if (firstLine) s.writing.stories[idx]!.title = firstLine;
@@ -166,7 +264,6 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
 
     wordCountEl.textContent = `${words} ${t.writing.words}`;
 
-    // Points for writing
     if (words > lastWordCount) {
       const newWords = words - lastWordCount;
       const points = Math.floor(newWords / 10);
@@ -181,7 +278,6 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
       lastWordCount = words;
     }
 
-    // Show save indicator
     saveIndicatorEl.classList.add('visible');
     setTimeout(() => saveIndicatorEl.classList.remove('visible'), 1500);
   }
@@ -194,64 +290,6 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
 
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(save, 2000);
-  });
-
-  // Suggestion popup
-  setOnSuggestionClick((word, suggestions) => {
-    const popupContainer = document.getElementById('suggestion-popup-container')!;
-
-    // Remove existing popup
-    popupContainer.innerHTML = '';
-
-    if (suggestions.length === 0) {
-      popupContainer.innerHTML = `
-        <div class="suggestion-popup" style="top:50%;left:50%;transform:translate(-50%,-50%);">
-          <div class="suggestion-popup-header">
-            ${renderMascot('thinking', 32)}
-            <span>Hmm, je n'ai pas de suggestion pour "${word}"</span>
-          </div>
-        </div>
-      `;
-      setTimeout(() => { popupContainer.innerHTML = ''; }, 2000);
-      return;
-    }
-
-    popupContainer.innerHTML = `
-      <div class="suggestion-popup" style="top:50%;left:50%;transform:translate(-50%,-50%);">
-        <div class="suggestion-popup-header">
-          ${renderMascot('happy', 32)}
-          <span>${t.writing.spellSuggestions}</span>
-        </div>
-        <div class="suggestion-list">
-          ${suggestions.map((s) => `<button class="suggestion-btn" data-suggestion="${s}">${s}</button>`).join('')}
-        </div>
-      </div>
-    `;
-
-    popupContainer.querySelectorAll('.suggestion-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const suggestion = btn.getAttribute('data-suggestion')!;
-        // Replace word in editor
-        const text = getEditorText(editorEl);
-        const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        const newText = text.replace(regex, suggestion);
-        setEditorText(editorEl, newText);
-
-        // Points for fixing spelling
-        addPoints(10);
-        popupContainer.innerHTML = '';
-        save();
-      });
-    });
-
-    // Close popup when clicking outside
-    const closePopup = (e: Event) => {
-      if (!(e.target as HTMLElement).closest('.suggestion-popup')) {
-        popupContainer.innerHTML = '';
-        document.removeEventListener('click', closePopup);
-      }
-    };
-    setTimeout(() => document.addEventListener('click', closePopup), 100);
   });
 
   // New prompt
@@ -270,7 +308,7 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
     }
   });
 
-  // Back button - save first
+  // Back button
   document.getElementById('btn-back-editor')?.addEventListener('click', () => {
     save();
     navigate('writing');
@@ -278,9 +316,8 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
 
   return () => {
     save();
+    cleanupEditor();
     if (saveTimer) clearTimeout(saveTimer);
-    clearInterval(checkReady);
-    setOnSuggestionClick(() => {});
   };
 }
 

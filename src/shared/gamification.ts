@@ -13,39 +13,6 @@ export const LEVELS: Level[] = [
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
-    id: 'first-lesson',
-    name: 'Première touche',
-    description: 'Termine ta première leçon de frappe',
-    icon: '⌨️',
-    check: (s) => Object.keys(s.typing.completedLessons).length >= 1,
-  },
-  {
-    id: 'home-row',
-    name: 'Dix doigts',
-    description: 'Termine toutes les leçons de la rangée du milieu',
-    icon: '🖐️',
-    check: (s) => {
-      for (let i = 1; i <= 5; i++) {
-        if (!s.typing.completedLessons[`lesson-${i}`]) return false;
-      }
-      return true;
-    },
-  },
-  {
-    id: 'speed-20',
-    name: 'Rapide comme l\'éclair',
-    description: 'Atteins 20 mots par minute',
-    icon: '⚡',
-    check: (s) => Object.values(s.typing.completedLessons).some((r) => r.bestWpm >= 20),
-  },
-  {
-    id: 'perfectionist',
-    name: 'Perfectionniste',
-    description: 'Obtiens 3 étoiles sur une leçon',
-    icon: '⭐',
-    check: (s) => Object.values(s.typing.completedLessons).some((r) => r.stars >= 3),
-  },
-  {
     id: 'first-story',
     name: 'Auteur en herbe',
     description: 'Écris ta première histoire',
@@ -60,11 +27,44 @@ export const ACHIEVEMENTS: Achievement[] = [
     check: (s) => s.writing.stories.some((st) => st.wordCount >= 100),
   },
   {
-    id: 'spell-fixer',
+    id: 'great-writer',
+    name: 'Grand écrivain',
+    description: 'Écris une histoire de plus de 500 mots',
+    icon: '✒️',
+    check: (s) => s.writing.stories.some((st) => st.wordCount >= 500),
+  },
+  {
+    id: 'zero-fault',
+    name: 'Zéro faute',
+    description: 'Écris un texte sans aucune erreur',
+    icon: '🏆',
+    check: (s) => s.gamification.achievements.includes('zero-fault'),
+  },
+  {
+    id: 'fixer-10',
     name: 'Correcteur',
-    description: 'Corrige 10 fautes d\'orthographe',
+    description: 'Corrige 10 fautes',
     icon: '🔧',
-    check: (s) => (s.gamification.totalPoints >= 100), // simplified: tracked via points
+    check: (s) => s.writing.totalCorrections >= 10,
+  },
+  {
+    id: 'grammar-fixer-10',
+    name: 'Grammairien',
+    description: 'Corrige 10 fautes de grammaire',
+    icon: '📐',
+    check: (s) => s.writing.grammarCorrections >= 10,
+  },
+  {
+    id: 'rich-vocab',
+    name: 'Vocabulaire riche',
+    description: 'Utilise 100 mots différents dans une histoire',
+    icon: '🌟',
+    check: (s) => {
+      return s.writing.stories.some((st) => {
+        const words = st.content.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+        return new Set(words).size >= 100;
+      });
+    },
   },
   {
     id: 'streak-7',
@@ -77,15 +77,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'streak-30',
     name: 'Inarrêtable',
     description: 'Utilise KidWriter 30 jours de suite',
-    icon: '🏆',
+    icon: '💎',
     check: (s) => s.gamification.dailyStreak >= 30,
   },
   {
-    id: 'all-lessons',
-    name: 'Diplômé',
-    description: 'Termine toutes les leçons de frappe',
-    icon: '🎓',
-    check: (s) => Object.keys(s.typing.completedLessons).length >= 20,
+    id: 'library',
+    name: 'Bibliothèque',
+    description: 'Écris 10 histoires',
+    icon: '📚',
+    check: (s) => s.writing.stories.length >= 10,
   },
 ];
 
@@ -122,7 +122,6 @@ export function addPoints(amount: number): { newAchievements: Achievement[]; lev
     }
     state.gamification.level = newLevel;
 
-    // Check achievements
     for (const achievement of ACHIEVEMENTS) {
       if (!state.gamification.achievements.includes(achievement.id) && achievement.check(state)) {
         state.gamification.achievements.push(achievement.id);
@@ -132,6 +131,23 @@ export function addPoints(amount: number): { newAchievements: Achievement[]; lev
   });
 
   return { newAchievements, leveledUp };
+}
+
+export function recordCorrection(isGrammar: boolean): void {
+  updateState((state) => {
+    state.writing.totalCorrections += 1;
+    if (isGrammar) {
+      state.writing.grammarCorrections += 1;
+    }
+  });
+}
+
+export function awardZeroFault(): void {
+  updateState((state) => {
+    if (!state.gamification.achievements.includes('zero-fault')) {
+      state.gamification.achievements.push('zero-fault');
+    }
+  });
 }
 
 export function updateDailyStreak(): void {
@@ -149,7 +165,6 @@ export function updateDailyStreak(): void {
       if (diffDays === 1) {
         state.gamification.dailyStreak += 1;
       } else if (diffDays > 2) {
-        // Allow 1 day forgiveness
         state.gamification.dailyStreak = 1;
       }
     } else {
@@ -158,24 +173,11 @@ export function updateDailyStreak(): void {
 
     state.gamification.lastActiveDate = today;
 
-    // Daily bonus
     if (!state.gamification.dailyActivity[today]) {
-      state.gamification.dailyActivity[today] = { keysTyped: 0, wordsWritten: 0 };
+      state.gamification.dailyActivity[today] = { wordsWritten: 0 };
       state.gamification.totalPoints += 20;
       state.gamification.level = computeLevel(state.gamification.totalPoints);
     }
-  });
-}
-
-export function recordTypingActivity(correctKeys: number, totalKeys: number): void {
-  updateState((state) => {
-    state.typing.totalKeysTyped += totalKeys;
-    state.typing.totalCorrectKeys += correctKeys;
-    const today = new Date().toISOString().slice(0, 10);
-    if (!state.gamification.dailyActivity[today]) {
-      state.gamification.dailyActivity[today] = { keysTyped: 0, wordsWritten: 0 };
-    }
-    state.gamification.dailyActivity[today]!.keysTyped += totalKeys;
   });
 }
 
@@ -183,7 +185,7 @@ export function recordWritingActivity(words: number): void {
   updateState((state) => {
     const today = new Date().toISOString().slice(0, 10);
     if (!state.gamification.dailyActivity[today]) {
-      state.gamification.dailyActivity[today] = { keysTyped: 0, wordsWritten: 0 };
+      state.gamification.dailyActivity[today] = { wordsWritten: 0 };
     }
     state.gamification.dailyActivity[today]!.wordsWritten += words;
   });

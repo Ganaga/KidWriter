@@ -96,17 +96,64 @@
   gap: 0.75rem;
 }
 
+.editor-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .word-count {
   font-size: 0.85rem;
   color: var(--text-muted);
 }
 
-.spell-status {
+/* Error count badges */
+.error-count {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.error-badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 1rem;
+  font-weight: 600;
+}
+
+.error-badge-spell {
+  background: rgba(255, 165, 2, 0.15);
+  color: var(--warning);
+}
+
+.error-badge-grammar {
+  background: rgba(108, 92, 231, 0.15);
+  color: var(--primary);
+}
+
+.no-errors {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+/* TTS toggle button */
+.tts-toggle {
+  background: none;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  justify-content: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.tts-toggle:hover {
+  border-color: var(--primary);
+  background: rgba(108, 92, 231, 0.08);
 }
 
 .editor-area {
@@ -129,6 +176,20 @@
 .editor-area:empty::before {
   content: attr(data-placeholder);
   color: var(--text-light);
+}
+
+/* Spelling error underline (orange) */
+.spell-error {
+  text-decoration: underline wavy var(--warning);
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+}
+
+/* Grammar error underline (purple) */
+.grammar-error {
+  text-decoration: underline wavy var(--primary);
+  text-decoration-skip-ink: none;
+  cursor: pointer;
 }
 
 /* Prompt banner */
@@ -164,22 +225,59 @@
 .suggestion-popup {
   position: fixed;
   background: var(--surface);
-  border: 2px solid var(--primary);
   border-radius: 1rem;
-  padding: 0.8rem;
+  padding: 1rem;
   box-shadow: var(--shadow-lg);
   z-index: 50;
-  max-width: 280px;
+  max-width: 340px;
   animation: fadeIn 0.2s ease-out;
+}
+
+.popup-spelling {
+  border: 2px solid var(--warning);
+}
+
+.popup-grammar {
+  border: 2px solid var(--primary);
 }
 
 .suggestion-popup-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.error-type-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.3rem;
+}
+
+.popup-spelling .error-type-label {
+  background: rgba(255, 165, 2, 0.15);
+  color: var(--warning);
+}
+
+.popup-grammar .error-type-label {
+  background: rgba(108, 92, 231, 0.15);
+  color: var(--primary);
+}
+
+.error-message {
   font-size: 0.85rem;
+  color: var(--text);
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+.suggestion-label {
+  font-size: 0.75rem;
   color: var(--text-muted);
+  margin-bottom: 0.3rem;
 }
 
 .suggestion-list {
@@ -190,18 +288,31 @@
 
 .suggestion-btn {
   padding: 0.3rem 0.7rem;
-  background: var(--primary-light);
   color: white;
   border: none;
   border-radius: 1rem;
   font-size: 0.9rem;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s;
 }
 
-.suggestion-btn:hover {
+.popup-spelling .suggestion-btn {
+  background: var(--warning);
+}
+
+.popup-spelling .suggestion-btn:hover {
+  background: #e08e00;
+  transform: translateY(-1px);
+}
+
+.popup-grammar .suggestion-btn {
   background: var(--primary);
+}
+
+.popup-grammar .suggestion-btn:hover {
+  background: #5a4bd1;
+  transform: translateY(-1px);
 }
 
 /* Save indicator */

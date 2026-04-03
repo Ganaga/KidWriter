@@ -49,14 +49,8 @@ export function renderParentZone(parentEl: HTMLElement): void {
 
   function showParentDashboard(): void {
     const state = getState();
-    const totalLessons = Object.keys(state.typing.completedLessons).length;
-    const avgAccuracy = state.typing.totalKeysTyped > 0
-      ? Math.round((state.typing.totalCorrectKeys / state.typing.totalKeysTyped) * 100)
-      : 0;
     const totalStories = state.writing.stories.length;
     const totalWords = state.writing.stories.reduce((sum, s) => sum + s.wordCount, 0);
-
-    // Recent activity
     const activityDays = Object.keys(state.gamification.dailyActivity).sort().reverse().slice(0, 7);
 
     document.getElementById('parent-dashboard')!.style.display = 'block';
@@ -65,24 +59,20 @@ export function renderParentZone(parentEl: HTMLElement): void {
         <h2>📊 Tableau de bord parent</h2>
 
         <div class="parent-stat-row">
-          <span class="parent-stat-label">Leçons terminées</span>
-          <span class="parent-stat-value">${totalLessons}/20</span>
-        </div>
-        <div class="parent-stat-row">
-          <span class="parent-stat-label">Précision moyenne</span>
-          <span class="parent-stat-value">${avgAccuracy}%</span>
-        </div>
-        <div class="parent-stat-row">
-          <span class="parent-stat-label">Touches tapées</span>
-          <span class="parent-stat-value">${state.typing.totalKeysTyped.toLocaleString('fr-FR')}</span>
-        </div>
-        <div class="parent-stat-row">
           <span class="parent-stat-label">Histoires écrites</span>
           <span class="parent-stat-value">${totalStories}</span>
         </div>
         <div class="parent-stat-row">
           <span class="parent-stat-label">Mots écrits (total)</span>
           <span class="parent-stat-value">${totalWords.toLocaleString('fr-FR')}</span>
+        </div>
+        <div class="parent-stat-row">
+          <span class="parent-stat-label">Fautes corrigées</span>
+          <span class="parent-stat-value">${state.writing.totalCorrections}</span>
+        </div>
+        <div class="parent-stat-row">
+          <span class="parent-stat-label">Fautes de grammaire corrigées</span>
+          <span class="parent-stat-value">${state.writing.grammarCorrections}</span>
         </div>
         <div class="parent-stat-row">
           <span class="parent-stat-label">Série actuelle</span>
