@@ -257,6 +257,10 @@ export function getCursorPos(): number {
   return lastKnownCursorPos;
 }
 
+export function setCursorPos(pos: number): void {
+  lastKnownCursorPos = pos;
+}
+
 export function getClosestError(): GrammarError | null {
   if (currentErrors.length === 0) return null;
   if (currentErrors.length === 1) return currentErrors[0]!;
