@@ -6,7 +6,7 @@ import { playKeySound, playAchievement } from '../../shared/audio';
 import { renderMascot } from '../../shared/mascot';
 import { speak, hasTtsSupport } from '../../shared/tts';
 import { getRandomSentence } from './sentences';
-import { compareWords, getScore, isComplete, isPerfect, getErrorRate, type ComparisonResult } from './comparison';
+import { compareWords, finalizeResults, getScore, isPerfect, getErrorRate, type ComparisonResult } from './comparison';
 import { isBuiltInKeyboardEnabled } from '../../shared/keyboard';
 import '../../shared/keyboard';
 import './dictation.css';
@@ -190,6 +190,7 @@ function renderExercise(container: HTMLElement): void {
   const inputHtml = `
     <div class="dictation-input-area">
       <input type="text" class="dictation-input" id="dictation-input" placeholder="Tape la phrase ici..." autocomplete="off" autocapitalize="off" autocorrect="off" />
+      <button class="btn btn-primary dictation-submit-btn" id="btn-submit">✓ Corriger</button>
       <plumigo-keyboard id="dict-vk-component"></plumigo-keyboard>
     </div>`;
 
@@ -230,13 +231,13 @@ function renderExercise(container: HTMLElement): void {
       dictVk.active = true;
     }
 
+    const ignoreAccents = getState().dictation?.ignoreAccents ?? false;
+
+    // Live preview while typing
     input.addEventListener('input', () => {
       if (!session) return;
-      const typed = input.value;
-      const ignoreAccents = getState().dictation?.ignoreAccents ?? false;
-      session.results = compareWords(session.sentence, typed, ignoreAccents);
+      session.results = compareWords(session.sentence, input.value, ignoreAccents);
 
-      // Update word display with results
       const display = document.getElementById('sentence-display')!;
       display.innerHTML = session.results
         .map((r) => {
@@ -244,48 +245,64 @@ function renderExercise(container: HTMLElement): void {
           return `<span class="dictation-word ${cls}">${r.expected}</span>`;
         })
         .join(' ');
+    });
 
-      // Check if complete
-      if (isComplete(session.results)) {
-        const perfect = isPerfect(session.results);
-        const { correct, total } = getScore(session.results);
+    // Submit: finalize and score
+    const submitAnswer = () => {
+      if (!session || session.done) return;
+      const typed = input.value.trim();
+      if (typed.length === 0) return;
 
-        session.done = true;
-        session.completedIds.push(session.sentenceId);
-        session.sessionCorrect += correct;
-        session.sessionTotal += total;
+      session.results = finalizeResults(session.sentence, typed, ignoreAccents);
+      const perfect = isPerfect(session.results);
+      const { correct, total } = getScore(session.results);
 
-        updateState((s) => {
-          s.dictation.sentencesCompleted += 1;
-          if (perfect) s.dictation.perfectScores += 1;
-        });
+      session.done = true;
+      session.completedIds.push(session.sentenceId);
+      session.sessionCorrect += correct;
+      session.sessionTotal += total;
 
-        const errors = total - correct;
-        const errorRate = getErrorRate(session.results);
-        const points = perfect ? 5 : Math.max(1, Math.floor(correct / 2));
-        const { newAchievements } = addPoints(points);
+      updateState((s) => {
+        s.dictation.sentencesCompleted += 1;
+        if (perfect) s.dictation.perfectScores += 1;
+      });
 
-        if (perfect) {
-          fireConfetti();
-          playAchievement();
-          speak('Parfait ! Zéro faute !');
-        } else if (errorRate > 0.3) {
-          playKeySound(false);
-          speak(`${errors} faute${errors > 1 ? 's' : ''}. Il faut s'entraîner encore un peu.`);
-        } else {
-          fireStars();
-          playKeySound(true);
-          speak(`Bien joué ! ${errors} faute${errors > 1 ? 's' : ''} seulement.`);
-        }
+      const errors = total - correct;
+      const errorRate = getErrorRate(session.results);
+      const points = perfect ? 5 : Math.max(1, Math.floor(correct / 2));
+      const { newAchievements } = addPoints(points);
 
-        for (const ach of newAchievements) {
-          playAchievement();
-          showNotification(ach.name, ach.icon);
-        }
+      if (perfect) {
+        fireConfetti();
+        playAchievement();
+        speak('Parfait ! Zéro faute !');
+      } else if (errorRate > 0.3) {
+        playKeySound(false);
+        speak(`${errors} faute${errors > 1 ? 's' : ''}. Il faut s'entraîner encore un peu.`);
+      } else {
+        fireStars();
+        playKeySound(true);
+        speak(`Bien joué ! ${errors} faute${errors > 1 ? 's' : ''} seulement.`);
+      }
 
-        renderExercise(container);
+      for (const ach of newAchievements) {
+        playAchievement();
+        showNotification(ach.name, ach.icon);
+      }
+
+      renderExercise(container);
+    };
+
+    // Enter key to submit
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitAnswer();
       }
     });
+
+    // "Corriger" button
+    document.getElementById('btn-submit')?.addEventListener('click', submitAnswer);
   }
 
   document.getElementById('btn-next')?.addEventListener('click', () => {

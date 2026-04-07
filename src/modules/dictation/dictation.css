@@ -177,6 +177,13 @@
   border-color: var(--primary);
 }
 
+.dictation-submit-btn {
+  margin-top: 0.75rem;
+  width: 100%;
+  padding: 0.7rem;
+  font-size: 1.1rem;
+}
+
 /* Result */
 .dictation-result {
   display: flex;

@@ -14,6 +14,15 @@ function stripTrailingPunctuation(str: string): string {
   return str.replace(/[.,!?;:]+$/, '');
 }
 
+function matchWord(typed: string, expected: string, ignoreAccents: boolean): boolean {
+  let a = ignoreAccents ? stripAccents(typed.toLowerCase()) : typed.toLowerCase();
+  let b = ignoreAccents ? stripAccents(expected.toLowerCase()) : expected.toLowerCase();
+  a = stripTrailingPunctuation(a);
+  b = stripTrailingPunctuation(b);
+  return a === b;
+}
+
+// Live comparison while typing — last word without trailing space stays 'typing'
 export function compareWords(expected: string, typed: string, ignoreAccents = false): ComparisonResult[] {
   const expectedWords = expected.trim().split(/\s+/);
   const typedWords = typed.trim().split(/\s+/).filter((w) => w.length > 0);
@@ -26,30 +35,28 @@ export function compareWords(expected: string, typed: string, ignoreAccents = fa
     const tw = typedWords[i]!;
     const isLastTypedWord = i === typedWords.length - 1;
 
-    // The word is still being typed if:
-    // - it's the last typed word AND
-    // - there's no space after it AND
-    // - the typed word is shorter than the expected word (still typing)
-    //   OR it could still become correct (starts matching)
+    // Last typed word without space after it → still typing
     if (isLastTypedWord && !typedEndsWithSpace) {
-      const isLastExpectedWord = i === expectedWords.length - 1;
-      if (!isLastExpectedWord) {
-        return { expected: exp, typed: tw, status: 'typing' as const };
-      }
-      // Last expected word: compare without trailing punctuation for length check
-      const expCore = stripTrailingPunctuation(exp);
-      if (tw.length < expCore.length) {
-        return { expected: exp, typed: tw, status: 'typing' as const };
-      }
+      return { expected: exp, typed: tw, status: 'typing' as const };
     }
 
-    // Compare: strip trailing punctuation so missing "." at end is not an error
-    let a = ignoreAccents ? stripAccents(tw.toLowerCase()) : tw.toLowerCase();
-    let b = ignoreAccents ? stripAccents(exp.toLowerCase()) : exp.toLowerCase();
-    a = stripTrailingPunctuation(a);
-    b = stripTrailingPunctuation(b);
-    const match = a === b;
-    return { expected: exp, typed: tw, status: match ? 'correct' as const : 'incorrect' as const };
+    const correct = matchWord(tw, exp, ignoreAccents);
+    return { expected: exp, typed: tw, status: correct ? 'correct' as const : 'incorrect' as const };
+  });
+}
+
+// Force-evaluate all words (called on Enter or "Corriger" button)
+export function finalizeResults(expected: string, typed: string, ignoreAccents = false): ComparisonResult[] {
+  const expectedWords = expected.trim().split(/\s+/);
+  const typedWords = typed.trim().split(/\s+/).filter((w) => w.length > 0);
+
+  return expectedWords.map((exp, i) => {
+    if (i >= typedWords.length) {
+      return { expected: exp, typed: '', status: 'incorrect' as const };
+    }
+    const tw = typedWords[i]!;
+    const correct = matchWord(tw, exp, ignoreAccents);
+    return { expected: exp, typed: tw, status: correct ? 'correct' as const : 'incorrect' as const };
   });
 }
 
