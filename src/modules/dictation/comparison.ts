@@ -10,6 +10,10 @@ function stripAccents(str: string): string {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ç/gi, 'c').replace(/œ/gi, 'oe').replace(/æ/gi, 'ae');
 }
 
+function stripTrailingPunctuation(str: string): string {
+  return str.replace(/[.,!?;:]+$/, '');
+}
+
 export function compareWords(expected: string, typed: string, ignoreAccents = false): ComparisonResult[] {
   const expectedWords = expected.trim().split(/\s+/);
   const typedWords = typed.trim().split(/\s+/).filter((w) => w.length > 0);
@@ -28,22 +32,22 @@ export function compareWords(expected: string, typed: string, ignoreAccents = fa
     // - the typed word is shorter than the expected word (still typing)
     //   OR it could still become correct (starts matching)
     if (isLastTypedWord && !typedEndsWithSpace) {
-      // Still typing: word is shorter than expected, or same length but let user confirm with space
-      // For the last expected word: consider done only when typed length >= expected length
       const isLastExpectedWord = i === expectedWords.length - 1;
       if (!isLastExpectedWord) {
-        // Not the last expected word: always wait for space
         return { expected: exp, typed: tw, status: 'typing' as const };
       }
-      // Last expected word: wait until typed is at least as long as expected
-      if (tw.length < exp.length) {
+      // Last expected word: compare without trailing punctuation for length check
+      const expCore = stripTrailingPunctuation(exp);
+      if (tw.length < expCore.length) {
         return { expected: exp, typed: tw, status: 'typing' as const };
       }
-      // Typed is long enough — judge it now
     }
 
-    const a = ignoreAccents ? stripAccents(tw.toLowerCase()) : tw.toLowerCase();
-    const b = ignoreAccents ? stripAccents(exp.toLowerCase()) : exp.toLowerCase();
+    // Compare: strip trailing punctuation so missing "." at end is not an error
+    let a = ignoreAccents ? stripAccents(tw.toLowerCase()) : tw.toLowerCase();
+    let b = ignoreAccents ? stripAccents(exp.toLowerCase()) : exp.toLowerCase();
+    a = stripTrailingPunctuation(a);
+    b = stripTrailingPunctuation(b);
     const match = a === b;
     return { expected: exp, typed: tw, status: match ? 'correct' as const : 'incorrect' as const };
   });
