@@ -203,6 +203,13 @@
   color: var(--text-muted);
 }
 
+.dictation-score-errors {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--danger);
+  margin-top: 0.2rem;
+}
+
 @media (max-width: 480px) {
   .difficulty-selector {
     grid-template-columns: 1fr;
