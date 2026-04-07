@@ -259,6 +259,7 @@
   min-height: 300px;
   padding: 1.2rem;
   background: var(--surface);
+  color: var(--text);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -266,6 +267,13 @@
   line-height: 1.8;
   outline: none;
   transition: border-color 0.2s;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+}
+
+.editor-area * {
+  color: inherit;
+  -webkit-text-fill-color: inherit;
 }
 
 .editor-area:focus {
