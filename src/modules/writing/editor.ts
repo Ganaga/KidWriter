@@ -40,27 +40,12 @@ function escapeHtml(text: string): string {
 function buildDecoratedHtml(text: string, errors: GrammarError[]): string {
   if (errors.length === 0) return escapeHtml(text);
 
-  // Sort by offset ascending
+  // Sort by offset ascending — always show ALL errors in the editor
   const sorted = [...errors]
     .map((e, i) => ({ ...e, originalIdx: i }))
     .sort((a, b) => a.offset - b.offset);
 
-  // In one-at-a-time mode, show the error closest to the cursor
-  let visible = sorted;
-  if (oneAtATimeMode) {
-    const cursorPos = lastKnownCursorPos;
-    // Find the closest error to the cursor
-    let closest = sorted[0]!;
-    let closestDist = Infinity;
-    for (const err of sorted) {
-      const dist = Math.min(Math.abs(err.offset - cursorPos), Math.abs(err.offset + err.length - cursorPos));
-      if (dist < closestDist) {
-        closestDist = dist;
-        closest = err;
-      }
-    }
-    visible = [closest];
-  }
+  const visible = sorted;
 
   let result = '';
   let lastEnd = 0;
