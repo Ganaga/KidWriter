@@ -6,7 +6,7 @@ import { playKeySound, playAchievement } from '../../shared/audio';
 import { renderMascot } from '../../shared/mascot';
 import { speak, hasTtsSupport } from '../../shared/tts';
 import { getRandomSentence } from './sentences';
-import { compareWords, getScore, isComplete, isPerfect, type ComparisonResult } from './comparison';
+import { compareWords, getScore, isComplete, isPerfect, getErrorRate, type ComparisonResult } from './comparison';
 import { isBuiltInKeyboardEnabled } from '../../shared/keyboard';
 import '../../shared/keyboard';
 import './dictation.css';
@@ -127,7 +127,13 @@ function startSession(container: HTMLElement, difficulty: Difficulty): void {
 function renderExercise(container: HTMLElement): void {
   if (!session) return;
 
-
+  const score = session.results.length > 0 ? getScore(session.results) : null;
+  const done = session.done;
+  const errorRate = done ? getErrorRate(session.results) : 0;
+  const perfect = done && score ? score.correct === score.total : false;
+  const resultErrors = score ? score.total - score.correct : 0;
+  const resultPose = perfect ? 'ecstatic' : errorRate > 0.3 ? 'unhappy' : 'happy';
+  const resultLabel = perfect ? 'Parfait !' : errorRate > 0.3 ? 'Il faut s\'entraîner...' : 'Bien joué !';
 
   let displayHtml: string;
   if (session.done || session.results.length > 0) {
@@ -148,8 +154,26 @@ function renderExercise(container: HTMLElement): void {
     displayHtml = '<span class="dictation-listen-hint">🎧 Tape ce que tu as entendu...</span>';
   }
 
-  const score = session.results.length > 0 ? getScore(session.results) : null;
-  const done = session.done;
+  const errorsLabel = resultErrors > 0
+    ? `<span class="dictation-score-errors">${resultErrors} faute${resultErrors > 1 ? 's' : ''}</span>`
+    : '';
+
+  const resultHtml = `
+    <div class="dictation-result">
+      ${renderMascot(resultPose, 80)}
+      <div class="dictation-score">
+        <span class="dictation-score-value">${score?.correct ?? 0} / ${score?.total ?? 0}</span>
+        <span class="dictation-score-label">${resultLabel}</span>
+        ${errorsLabel}
+      </div>
+      <button class="btn btn-primary" id="btn-next">Suivant →</button>
+    </div>`;
+
+  const inputHtml = `
+    <div class="dictation-input-area">
+      <input type="text" class="dictation-input" id="dictation-input" placeholder="Tape la phrase ici..." autocomplete="off" autocapitalize="off" autocorrect="off" />
+      <plumigo-keyboard id="dict-vk-component"></plumigo-keyboard>
+    </div>`;
 
   container.innerHTML = `
     <div class="dictation-page fade-in">
@@ -163,21 +187,7 @@ function renderExercise(container: HTMLElement): void {
         <button class="btn btn-ghost" id="btn-replay">🔊 Réécouter</button>
       </div>
 
-      ${done ? `
-        <div class="dictation-result">
-          ${renderMascot(score && score.correct === score.total ? 'ecstatic' : 'happy', 80)}
-          <div class="dictation-score">
-            <span class="dictation-score-value">${score?.correct ?? 0} / ${score?.total ?? 0}</span>
-            <span class="dictation-score-label">${score && score.correct === score.total ? 'Parfait !' : 'Bien joué !'}</span>
-          </div>
-          <button class="btn btn-primary" id="btn-next">Suivant →</button>
-        </div>
-      ` : `
-        <div class="dictation-input-area">
-          <input type="text" class="dictation-input" id="dictation-input" placeholder="Tape la phrase ici..." autocomplete="off" autocapitalize="off" autocorrect="off" />
-          <plumigo-keyboard id="dict-vk-component"></plumigo-keyboard>
-        </div>
-      `}
+      ${done ? resultHtml : inputHtml}
     </div>
   `;
 
@@ -231,15 +241,22 @@ function renderExercise(container: HTMLElement): void {
           if (perfect) s.dictation.perfectScores += 1;
         });
 
+        const errors = total - correct;
+        const errorRate = getErrorRate(session.results);
         const points = perfect ? 5 : Math.max(1, Math.floor(correct / 2));
         const { newAchievements } = addPoints(points);
 
         if (perfect) {
           fireConfetti();
           playAchievement();
+          speak('Parfait ! Zéro faute !');
+        } else if (errorRate > 0.3) {
+          playKeySound(false);
+          speak(`${errors} faute${errors > 1 ? 's' : ''}. Il faut s'entraîner encore un peu.`);
         } else {
           fireStars();
           playKeySound(true);
+          speak(`Bien joué ! ${errors} faute${errors > 1 ? 's' : ''} seulement.`);
         }
 
         for (const ach of newAchievements) {

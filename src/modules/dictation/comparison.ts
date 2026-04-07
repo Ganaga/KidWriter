@@ -19,8 +19,11 @@ export function compareWords(expected: string, typed: string): ComparisonResult[
 
     // If this is the last typed word and the user hasn't pressed space yet,
     // they're still typing it — don't judge it yet
+    // UNLESS it's the very last expected word (no need for trailing space)
     const isLastTypedWord = i === typedWords.length - 1;
-    if (isLastTypedWord && !typedEndsWithSpace) {
+    const isLastExpectedWord = i === expectedWords.length - 1;
+
+    if (isLastTypedWord && !typedEndsWithSpace && !isLastExpectedWord) {
       return { expected: exp, typed: tw, status: 'typing' as const };
     }
 
@@ -41,4 +44,10 @@ export function isComplete(results: ComparisonResult[]): boolean {
 
 export function isPerfect(results: ComparisonResult[]): boolean {
   return results.every((r) => r.status === 'correct');
+}
+
+export function getErrorRate(results: ComparisonResult[]): number {
+  const { correct, total } = getScore(results);
+  if (total === 0) return 0;
+  return (total - correct) / total;
 }
