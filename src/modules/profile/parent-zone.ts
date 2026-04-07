@@ -106,6 +106,20 @@ export class PlumigoParentZone extends LitElement {
       border-radius: var(--radius); font-family: inherit; font-weight: 600; cursor: pointer;
     }
 
+    .dictation-display-section { margin-top: 0.75rem; }
+    .toggle-label { font-size: 0.9rem; color: var(--text); display: block; margin-bottom: 0.5rem; }
+    .dict-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .dict-opt {
+      display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+      padding: 0.6rem 0.4rem; background: var(--surface); border: 2px solid var(--border);
+      border-radius: var(--radius); cursor: pointer; font-family: inherit; text-align: center;
+      transition: border-color 0.2s;
+    }
+    .dict-opt:hover { border-color: var(--primary-light); }
+    .dict-opt-active { border-color: var(--primary); background: rgba(108, 92, 231, 0.06); }
+    .dict-opt-icon { font-size: 1.4rem; }
+    .dict-opt-label { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+
     .reset-btn {
       margin-top: 1.5rem; background: none; border: 2px solid var(--danger); color: var(--danger);
       border-radius: 2rem; padding: 0.5rem 1.2rem; font-family: inherit; font-size: 0.9rem; cursor: pointer;
@@ -134,6 +148,11 @@ export class PlumigoParentZone extends LitElement {
   private onAccentsToggle(e: Event) {
     const checked = (e.target as HTMLInputElement).checked;
     updateState((s) => { s.dictation.ignoreAccents = checked; });
+  }
+
+  private setShowMode(mode: 'flash' | 'hidden') {
+    updateState((s) => { s.dictation.showSentence = mode; });
+    this.requestUpdate();
   }
 
   private addProfile() {
@@ -216,6 +235,22 @@ export class PlumigoParentZone extends LitElement {
             <span class="toggle-hint">Les erreurs d'accents (é/è/ê, à, ù, ô, ç) ne sont pas comptées en dictée</span>
             <input type="checkbox" ?checked=${state.dictation.ignoreAccents} @change=${this.onAccentsToggle} />
           </label>
+
+          <div class="dictation-display-section">
+            <span class="toggle-label">Dictée : affichage de la phrase</span>
+            <div class="dict-options">
+              <button class="dict-opt ${state.dictation.showSentence === 'flash' ? 'dict-opt-active' : ''}"
+                      @click=${() => this.setShowMode('flash')}>
+                <span class="dict-opt-icon">👀</span>
+                <span class="dict-opt-label">Visible 5 sec</span>
+              </button>
+              <button class="dict-opt ${state.dictation.showSentence === 'hidden' ? 'dict-opt-active' : ''}"
+                      @click=${() => this.setShowMode('hidden')}>
+                <span class="dict-opt-icon">🙈</span>
+                <span class="dict-opt-label">Cachée</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="profiles">
