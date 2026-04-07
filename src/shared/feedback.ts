@@ -62,23 +62,21 @@ export class PlumigoFeedback extends LitElement {
     }
   `;
 
-  private getClosestError(): GrammarError | null {
+  private getErrorAtCursor(): GrammarError | null {
     if (this.errors.length === 0) return null;
     if (this.errors.length === 1) return this.errors[0]!;
 
-    let closest = this.errors[0]!;
-    let closestDist = Infinity;
-    for (const err of this.errors) {
-      const dist = Math.min(
-        Math.abs(err.offset - this.cursorPos),
-        Math.abs(err.offset + err.length - this.cursorPos),
-      );
-      if (dist < closestDist) {
-        closestDist = dist;
-        closest = err;
+    // Find the first error whose start is at or before the cursor
+    // (i.e. the error just to the left of where the child is typing)
+    const sorted = [...this.errors].sort((a, b) => a.offset - b.offset);
+    let best: GrammarError | null = null;
+    for (const err of sorted) {
+      if (err.offset <= this.cursorPos) {
+        best = err;
       }
     }
-    return closest;
+    // If cursor is before all errors, show the first one
+    return best ?? sorted[0]!;
   }
 
   render() {
@@ -100,7 +98,7 @@ export class PlumigoFeedback extends LitElement {
       pose = 'unhappy';
       cls = 'error';
       msgCls = 'msg-error';
-      const closest = this.getClosestError()!;
+      const closest = this.getErrorAtCursor()!;
       const errorWord = this.text.slice(closest.offset, closest.offset + closest.length);
 
       if (closest.isGrammar) {
