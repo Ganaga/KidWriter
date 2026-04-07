@@ -32,7 +32,7 @@ type KeyboardMode = 'lower' | 'upper' | 'numbers';
 @customElement('plumigo-keyboard')
 export class PlumigoKeyboard extends LitElement {
   @property({ type: Object }) target: HTMLElement | HTMLInputElement | null = null;
-  @property({ type: Boolean }) active = false;
+  @property({ type: Boolean, reflect: true }) active = false;
 
   @litState() private mode: KeyboardMode = 'lower';
   private cursorPos = 0;
