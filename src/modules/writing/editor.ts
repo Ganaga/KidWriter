@@ -271,16 +271,12 @@ export function getClosestError(): GrammarError | null {
   if (currentErrors.length === 1) return currentErrors[0]!;
 
   const cursor = lastKnownCursorPos;
-  let closest = currentErrors[0]!;
-  let closestDist = Infinity;
-  for (const err of currentErrors) {
-    const dist = Math.min(Math.abs(err.offset - cursor), Math.abs(err.offset + err.length - cursor));
-    if (dist < closestDist) {
-      closestDist = dist;
-      closest = err;
-    }
+  const sorted = [...currentErrors].sort((a, b) => a.offset - b.offset);
+  let best: GrammarError | null = null;
+  for (const err of sorted) {
+    if (err.offset <= cursor) best = err;
   }
-  return closest;
+  return best ?? sorted[0]!;
 }
 
 export function getClosestErrorIndex(): number {

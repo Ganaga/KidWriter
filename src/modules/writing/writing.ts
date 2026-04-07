@@ -221,6 +221,25 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
 
   const feedbackEl = document.getElementById('feedback-component') as any;
 
+  // Update feedback when cursor moves (click or arrow keys)
+  const updateFeedbackCursor = () => {
+    // Read cursor position directly from selection
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && feedbackEl) {
+      const range = sel.getRangeAt(0);
+      const pre = document.createRange();
+      pre.selectNodeContents(editorEl);
+      pre.setEnd(range.startContainer, range.startOffset);
+      feedbackEl.cursorPos = pre.toString().length;
+    }
+  };
+  editorEl.addEventListener('click', updateFeedbackCursor);
+  editorEl.addEventListener('keyup', (e: KeyboardEvent) => {
+    if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') {
+      updateFeedbackCursor();
+    }
+  });
+
   setOnErrorsUpdated((errors: GrammarError[]) => {
     const text = getEditorText(editorEl);
     const wordCount = text.trim().split(/\s+/).filter((w) => w.length > 0).length;
