@@ -151,6 +151,13 @@ export class PlumigoKeyboard extends LitElement {
     sel.addRange(range);
   }
 
+  private notifyCursorPos(): void {
+    this.dispatchEvent(new CustomEvent('vk-cursor', {
+      bubbles: true, composed: true,
+      detail: { pos: this.cursorPos },
+    }));
+  }
+
   private insertText(text: string): void {
     if (!this.target) return;
     if (this.target instanceof HTMLInputElement) {
@@ -164,9 +171,16 @@ export class PlumigoKeyboard extends LitElement {
     } else {
       const plain = this.getPlainText(this.target);
       const pos = this.cursorPos;
-      this.target.innerText = plain.slice(0, pos) + text + plain.slice(pos);
+      const newText = plain.slice(0, pos) + text + plain.slice(pos);
+      this.target.innerText = newText;
       this.cursorPos = pos + text.length;
-      this.setCursor(this.target, this.cursorPos);
+      // Set cursor after a microtask to let DOM settle
+      requestAnimationFrame(() => {
+        if (this.target && !(this.target instanceof HTMLInputElement)) {
+          this.setCursor(this.target, this.cursorPos);
+        }
+      });
+      this.notifyCursorPos();
       this.target.dispatchEvent(new Event('input', { bubbles: true }));
     }
   }
@@ -191,7 +205,12 @@ export class PlumigoKeyboard extends LitElement {
       if (pos > 0) {
         this.target.innerText = plain.slice(0, pos - 1) + plain.slice(pos);
         this.cursorPos = pos - 1;
-        this.setCursor(this.target, this.cursorPos);
+        requestAnimationFrame(() => {
+          if (this.target && !(this.target instanceof HTMLInputElement)) {
+            this.setCursor(this.target, this.cursorPos);
+          }
+        });
+        this.notifyCursorPos();
         this.target.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }

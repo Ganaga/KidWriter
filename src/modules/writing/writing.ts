@@ -18,6 +18,7 @@ import {
   undo,
   redo,
   getCursorPos,
+  setCursorPos,
 } from './editor';
 import type { GrammarError } from './grammar-checker';
 import { startPomodoro, formatTime, type PomodoroController } from '../../shared/pomodoro';
@@ -210,6 +211,11 @@ function renderEditorView(container: HTMLElement, storyId: string): () => void {
     vkEl.target = editorEl;
     vkEl.active = true;
   }
+
+  // Sync virtual keyboard cursor position with editor
+  document.getElementById('vk-component')?.addEventListener('vk-cursor', ((e: CustomEvent) => {
+    setCursorPos(e.detail.pos);
+  }) as EventListener);
 
   // Trigger initial check after a short delay
   setTimeout(() => triggerCheck(editorEl), 500);
