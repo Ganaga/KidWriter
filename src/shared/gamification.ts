@@ -169,6 +169,20 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '👂',
     check: (s) => s.dictation.perfectScores >= 3,
   },
+  {
+    id: 'hangman-5',
+    name: 'Devineur',
+    description: 'Gagne 5 parties au pendu',
+    icon: '🎯',
+    check: (s) => s.hangman.wordsWon >= 5,
+  },
+  {
+    id: 'hangman-20',
+    name: 'Maître du pendu',
+    description: 'Gagne 20 parties au pendu',
+    icon: '🏹',
+    check: (s) => s.hangman.wordsWon >= 20,
+  },
 ];
 
 function computeLevel(points: number): number {

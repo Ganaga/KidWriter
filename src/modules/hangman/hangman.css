@@ -1,0 +1,180 @@
+.hangman-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.hangman-page h1 {
+  color: var(--primary);
+  margin: 0 0 1rem;
+  font-size: 1.8rem;
+}
+
+.hangman-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.hangman-intro p {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  margin: 0.5rem 0 0;
+}
+
+.hangman-game {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+}
+
+.hangman-drawing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.hangman-svg {
+  width: 100px;
+  height: 140px;
+  color: var(--primary);
+}
+
+.hangman-tries {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.hangman-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hangman-hint {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0;
+  font-style: italic;
+}
+
+.hangman-word {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin: 1.5rem 0;
+  font-family: 'Courier New', monospace;
+  flex-wrap: wrap;
+}
+
+.hangman-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 40px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 3px solid var(--primary);
+  text-transform: uppercase;
+}
+
+.hangman-letter.revealed {
+  color: var(--primary);
+}
+
+.hangman-keyboard {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 0.3rem;
+  margin: 1rem 0;
+}
+
+.hangman-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hangman-key:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(108, 92, 231, 0.08);
+}
+
+.hangman-key:disabled {
+  cursor: not-allowed;
+}
+
+.hangman-key.letter-correct {
+  background: var(--secondary);
+  color: white;
+  border-color: var(--secondary);
+}
+
+.hangman-key.letter-wrong {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+  opacity: 0.6;
+}
+
+.hangman-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 2px solid var(--primary);
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.hangman-result h2 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.4rem;
+}
+
+.hangman-result p {
+  margin: 0;
+  color: var(--text);
+}
+
+@media (max-width: 480px) {
+  .hangman-keyboard {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .hangman-game {
+    flex-direction: column;
+  }
+
+  .hangman-letter {
+    width: 26px;
+    height: 36px;
+    font-size: 1.3rem;
+  }
+}

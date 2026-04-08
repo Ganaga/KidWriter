@@ -48,6 +48,10 @@ function defaultState(name: string = ''): AppState {
       showSentence: 'flash',
       ignoreAccents: false,
     },
+    hangman: {
+      wordsWon: 0,
+      wordsLost: 0,
+    },
   };
 }
 
@@ -148,6 +152,7 @@ function loadStateFor(profileId: string): AppState {
         writing: { ...defaults.writing, ...saved.writing },
         gamification: { ...defaults.gamification, ...saved.gamification },
         dictation: { ...defaults.dictation, ...saved.dictation },
+        hangman: { ...defaults.hangman, ...saved.hangman },
       };
     }
   } catch { /* */ }
