@@ -42,6 +42,10 @@ export interface AppState {
     showSentence: 'flash' | 'hidden';
     ignoreAccents: boolean;
   };
+  hangman: {
+    wordsWon: number;
+    wordsLost: number;
+  };
 }
 
 export interface Achievement {
@@ -57,5 +61,5 @@ export interface Level {
   minPoints: number;
 }
 
-export type Route = '' | 'writing' | 'profile' | 'dictation';
+export type Route = '' | 'writing' | 'profile' | 'dictation' | 'hangman';
 export type RouteHandler = (container: HTMLElement, params?: string) => void | (() => void);

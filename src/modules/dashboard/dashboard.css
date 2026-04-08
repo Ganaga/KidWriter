@@ -164,6 +164,15 @@
   border-color: #4a3dc7;
 }
 
+.card-hangman {
+  background: linear-gradient(135deg, #fdcb6e, #e17055);
+  color: white;
+}
+
+.card-hangman:hover {
+  border-color: #c0392b;
+}
+
 .profile-link {
   background: var(--surface);
   border: 2px solid var(--border);
