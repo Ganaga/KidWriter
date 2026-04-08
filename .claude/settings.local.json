@@ -21,7 +21,9 @@
       "Bash(npm uninstall:*)",
       "Bash(node:*)",
       "Bash(git remote:*)",
-      "Bash(xargs wc:*)"
+      "Bash(xargs wc:*)",
+      "Bash(where bubblewrap:*)",
+      "Bash(cmd:*)"
     ]
   }
 }
