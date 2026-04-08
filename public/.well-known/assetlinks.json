@@ -3,6 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "io.github.ganaga.twa",
-    "sha256_cert_fingerprints": ["__SHA256_FINGERPRINT__"]
+    "sha256_cert_fingerprints": ["76:0B:0E:3C:4E:D9:A3:86:CD:55:18:1D:60:3D:1D:21:60:B4:E4:FB:39:23:9B:22:AE:40:43:94:6E:5F:EB:8B"]
   }
 }]
