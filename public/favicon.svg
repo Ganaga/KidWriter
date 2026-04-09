@@ -1,4 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background circle -->
   <circle cx="32" cy="32" r="30" fill="#6C5CE7"/>
-  <text x="32" y="44" text-anchor="middle" font-size="32" fill="white" font-family="sans-serif">K</text>
+
+  <!-- Feather shape -->
+  <g transform="translate(32 32) rotate(-30) translate(-32 -32)">
+    <!-- Feather body (oval) -->
+    <ellipse cx="32" cy="28" rx="11" ry="20" fill="#FFEAA7"/>
+    <!-- Feather tip -->
+    <path d="M32 8 L32 48" stroke="#8B6914" stroke-width="2" stroke-linecap="round"/>
+    <!-- Barbs left -->
+    <path d="M32 14 Q24 16 22 22" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M32 20 Q22 22 21 28" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M32 26 Q22 28 22 34" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M32 32 Q23 34 24 40" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Barbs right -->
+    <path d="M32 14 Q40 16 42 22" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M32 20 Q42 22 43 28" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M32 26 Q42 28 42 34" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M32 32 Q41 34 40 40" stroke="#FFEAA7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Quill tip -->
+    <path d="M32 48 L30 54 L32 56 L34 54 Z" fill="#2D3436"/>
+  </g>
 </svg>
