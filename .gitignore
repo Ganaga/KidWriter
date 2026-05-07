@@ -7,5 +7,6 @@ dist/
 *.apk
 *.aab
 *.keystore
+*.keystore.*
 plumigo.apk
 plumigo.aab
