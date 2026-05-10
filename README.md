@@ -26,20 +26,14 @@ Application web éducative pour apprendre à écrire en français avec un correc
 L'app utilise TWA (Trusted Web Activity) via Bubblewrap pour être empaquetée en APK.
 
 ```bash
-# Installer Bubblewrap
-npm install -g @bubblewrap/cli
-
-# Initialiser le projet TWA (première fois)
-bubblewrap init --manifest="https://ganaga.github.io/Plumigo/manifest.json"
-
-# Générer l'APK signé
-bubblewrap build
-# ou
-npm run build:apk
+# Générer l'APK signé (sans installation globale de Bubblewrap)
+npx --yes @bubblewrap/cli@latest build --signingKeyPath=$PWD/android.keystore --signingKeyAlias=android
 
 # Récupérer le fingerprint SHA256 du certificat
 keytool -printcert -jarfile app-release-signed.apk | grep SHA256
 ```
+
+Première utilisation : Bubblewrap propose de télécharger JDK 17 et l'Android SDK (~1 GB), puis demande le mot de passe de la keystore.
 
 Après la première génération, mettre à jour `public/.well-known/assetlinks.json` avec le vrai fingerprint SHA256, puis push et redéployer.
 
